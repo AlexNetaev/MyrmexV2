@@ -1,7 +1,5 @@
 """Dummy HAL implementation for Phase 1 testing."""
 
-from typing import Any
-
 from src.contracts.enums import (
     CommandLifecycleState,
     ErrorClass,
@@ -10,6 +8,7 @@ from src.contracts.enums import (
     HALCommandResultStatus,
     LockPolicy,
     ProcessLifecycleState,
+    ReleaseAuthority,
     ResourceClass,
     SecurityMode,
     SlotStatus,
@@ -30,157 +29,199 @@ from src.contracts.hal_models import (
     SlotState,
     ZoneState,
 )
-from src.hal import HALInterface
+from src.hal.hal_interface import HalInterface
 
 
-class DummyHAL(HALInterface):
+_DUMMY_TIMESTAMP = "1970-01-01T00:00:00Z"
+
+
+class DummyHal(HalInterface):
     """Dummy HAL implementation for Phase 1 testing."""
 
-    def __init__(self) -> None:
-        self._environment_manifest = self._create_default_manifest()
-        self._slot_states: dict[str, SlotState] = {}
-        self._zone_states: dict[str, ZoneState] = {}
-        self._process_states: dict[str, ProcessState] = {}
-        self._command_statuses: dict[str, HALCommandStatus] = {}
-        self._estop_state = EstopState(
-            state=EstopStateName.NORMAL,
-            origin=EstopOrigin.SOFTWARE,
+    def get_environment_manifest(self) -> EnvironmentManifest:
+        slot = SlotDescriptor(
+            slot_id="dummy-slot",
+            display_name="Dummy Sandbox Slot",
+            resource_class=ResourceClass.SANDBOX_ENVIRONMENT,
+            capabilities=["dummy"],
+            mutex_group="dummy-group",
+            physical_zones=["dummy-zone"],
+            physical_actuation=False,
+            compute_capable=False,
+            sandbox_capable=True,
+            max_command_timeout_s=10.0,
+            max_process_duration_s=10.0,
+            max_parameter_payload_bytes=1024,
+            supported_process_modes=["START", "MONITOR", "HOLD", "ABORT"],
         )
 
-        # Initialize default slot and zone states
-        for slot in self._environment_manifest.slots:
-            self._slot_states[slot.slot_id] = SlotState(
-                slot_id=slot.slot_id,
-                status=SlotStatus.FREE,
-            )
-        for zone in self._environment_manifest.mutex_zones:
-            self._zone_states[zone.zone_id] = ZoneState(
-                zone_id=zone.zone_id,
-                status=ZoneStatus.FREE,
-                lock_policy=zone.lock_policy,
-            )
+        zone = MutexZone(
+            zone_id="dummy-zone",
+            display_name="Dummy Zone",
+            member_slots=["dummy-slot"],
+            lock_policy=LockPolicy.EXCLUSIVE,
+            dynamic_lock_required=False,
+            estop_relevant=False,
+            max_hold_time_s=10.0,
+        )
 
-    def _create_default_manifest(self) -> EnvironmentManifest:
-        """Create a default environment manifest for testing."""
         return EnvironmentManifest(
-            environment_id="dummy-env-001",
-            environment_version="0.1.0",
-            schema_version="0.2.0",
-            slots=[
-                SlotDescriptor(
-                    slot_id="slot-lab-001",
-                    display_name="Lab Actuator Slot 1",
-                    resource_class=ResourceClass.LAB_ACTUATOR,
-                    capabilities=["move_to", "measure"],
-                    physical_actuation=True,
-                ),
-                SlotDescriptor(
-                    slot_id="slot-compute-001",
-                    display_name="Compute Node 1",
-                    resource_class=ResourceClass.COMPUTE_NODE,
-                    capabilities=["compute"],
-                    compute_capable=True,
-                ),
-                SlotDescriptor(
-                    slot_id="slot-sandbox-001",
-                    display_name="Sandbox Environment 1",
-                    resource_class=ResourceClass.SANDBOX_ENVIRONMENT,
-                    capabilities=["simulate"],
-                    sandbox_capable=True,
-                ),
+            environment_id="dummy-environment",
+            environment_version="0.2.0",
+            schema_version="hal-0.2.0",
+            slots=[slot],
+            mutex_zones=[zone],
+            capabilities=["dummy"],
+            estop_mechanism="software",
+            max_command_timeout_s=10.0,
+            default_lease_ttl_s=60.0,
+            heartbeat_interval_s=5.0,
+            supported_security_modes=[
+                SecurityMode.SANDBOX,
+                SecurityMode.DEV_SANDBOX_ONLY,
             ],
-            mutex_zones=[
-                MutexZone(
-                    zone_id="zone-lab-001",
-                    member_slots=["slot-lab-001"],
-                    lock_policy=LockPolicy.EXCLUSIVE,
-                ),
-            ],
-            capabilities=["move_to", "measure", "compute", "simulate"],
-            estop_mechanism="software_estop",
-            max_command_timeout_s=300.0,
-            default_lease_ttl_s=600.0,
-            heartbeat_interval_s=30.0,
-            supported_security_modes=[SecurityMode.NORMAL, SecurityMode.SANDBOX],
             supported_resource_classes=[
-                ResourceClass.LAB_ACTUATOR,
-                ResourceClass.COMPUTE_NODE,
                 ResourceClass.SANDBOX_ENVIRONMENT,
             ],
         )
 
-    def get_environment_manifest(self) -> EnvironmentManifest:
-        """Return the environment manifest."""
-        return self._environment_manifest
-
     def get_slot_state(self, slot_id: str) -> SlotState:
-        """Get state of a specific slot."""
-        if slot_id not in self._slot_states:
-            raise ValueError(f"Unknown slot_id: {slot_id}")
-        return self._slot_states[slot_id]
+        return SlotState(
+            slot_id=slot_id,
+            status=SlotStatus.FREE,
+        )
 
     def get_zone_state(self, zone_id: str) -> ZoneState:
-        """Get state of a specific zone."""
-        if zone_id not in self._zone_states:
-            raise ValueError(f"Unknown zone_id: {zone_id}")
-        return self._zone_states[zone_id]
+        return ZoneState(
+            zone_id=zone_id,
+            status=ZoneStatus.FREE,
+            lock_policy=LockPolicy.EXCLUSIVE,
+        )
 
-    def get_process_state(self, process_id: str) -> ProcessState:
-        """Get state of a specific process."""
-        if process_id not in self._process_states:
-            raise ValueError(f"Unknown process_id: {process_id}")
-        return self._process_states[process_id]
-
-    def submit_command(self, command: HALCommand) -> HALCommandResult:
-        """Submit a HAL command for execution (dummy)."""
-        slot_state = self.get_slot_state(command.slot_id)
-
-        result = HALCommandResult(
+    def execute_command(self, command: HALCommand) -> HALCommandResult:
+        return HALCommandResult(
             command_id=command.command_id,
-            status=HALCommandResultStatus.SUCCESS,
-            slot_state=slot_state,
+            status=HALCommandResultStatus.DENIED,
+            error_code="LEASE_INVALID",
+            error_class=ErrorClass.OPERATIONAL,
+            slot_state=SlotState(
+                slot_id=command.slot_id,
+                status=SlotStatus.FREE,
+            ),
         )
 
-        self._command_statuses[command.command_id] = HALCommandStatus(
-            command_id=command.command_id,
-            lifecycle_state=CommandLifecycleState.SUCCESS,
-        )
-
-        return result
-
-    def submit_process(self, process: ProcessCommand) -> ProcessResult:
-        """Submit a process command for execution (dummy)."""
-        process_state = ProcessState(
-            process_id=process.process_id,
-            device_job_id=process.device_job_id,
-            slot_id=process.slot_id,
-            lease_ref=process.lease_ref,
-            process_state=ProcessLifecycleState.RUNNING,
-        )
-        self._process_states[process.process_id] = process_state
-
+    def start_process(self, process_command: ProcessCommand) -> ProcessResult:
         return ProcessResult(
-            process_id=process.process_id,
-            device_job_id=process.device_job_id,
-            slot_id=process.slot_id,
-            process_state=ProcessLifecycleState.RUNNING,
+            process_id=process_command.process_id,
+            slot_id=process_command.slot_id,
+            process_state=ProcessLifecycleState.FAULT,
+            error_code="PROCESS_INVALID",
+            error_class=ErrorClass.OPERATIONAL,
+        )
+
+    def monitor_process(self, process_id: str) -> ProcessResult:
+        return ProcessResult(
+            process_id=process_id,
+            slot_id="unknown",
+            process_state=ProcessLifecycleState.UNKNOWN,
+            error_code="RECOVERY_UNSAFE",
+            error_class=ErrorClass.OPERATIONAL,
+        )
+
+    def hold_process(self, process_id: str) -> ProcessResult:
+        return ProcessResult(
+            process_id=process_id,
+            slot_id="unknown",
+            process_state=ProcessLifecycleState.UNKNOWN,
+            error_code="RECOVERY_UNSAFE",
+            error_class=ErrorClass.OPERATIONAL,
+        )
+
+    def resume_process(self, process_id: str, resume_token: str) -> ProcessResult:
+        return ProcessResult(
+            process_id=process_id,
+            slot_id="unknown",
+            process_state=ProcessLifecycleState.UNKNOWN,
+            error_code="RECOVERY_UNSAFE",
+            error_class=ErrorClass.OPERATIONAL,
+        )
+
+    def abort_process(self, process_id: str) -> ProcessResult:
+        return ProcessResult(
+            process_id=process_id,
+            slot_id="unknown",
+            process_state=ProcessLifecycleState.UNKNOWN,
+            error_code="RECOVERY_UNSAFE",
+            error_class=ErrorClass.OPERATIONAL,
+        )
+
+    def release_stage(
+        self,
+        process_id: str,
+        stage_id: str,
+        release_authority: ReleaseAuthority,
+    ) -> ProcessResult:
+        return ProcessResult(
+            process_id=process_id,
+            slot_id="unknown",
+            process_state=ProcessLifecycleState.WAITING_FOR_RELEASE,
+            error_code="STAGE_RELEASE_DENIED",
+            error_class=ErrorClass.OPERATIONAL,
+        )
+
+    def report_estop(self, reason: str, trigger_source: str) -> EstopState:
+        return EstopState(
+            state=EstopStateName.ACTIVE,
+            origin=EstopOrigin.SOFTWARE,
+            reason=reason,
+            trigger_source=trigger_source,
+            reset_policy="MANUAL",
+        )
+
+    def report_hardware_interlock(
+        self,
+        interlock_event: HardwareInterlockEvent,
+    ) -> EstopState:
+        return EstopState(
+            state=EstopStateName.LATCHED,
+            origin=EstopOrigin.HARDWARE_INTERLOCK,
+            hardware_interlock_id=interlock_event.interlock_source,
+            physical_reset_required=True,
+            safe_state_verified=False,
+            inspection_required=True,
+            reason="HARDWARE_INTERLOCK_TRIGGERED",
+            trigger_source=interlock_event.interlock_source,
+            affected_slots=[interlock_event.slot_id],
+            reset_policy="MANUAL",
+        )
+
+    def get_estop_state(self) -> EstopState:
+        return EstopState(
+            state=EstopStateName.NORMAL,
+            origin=EstopOrigin.SOFTWARE,
+            reset_policy="NONE",
+        )
+
+    def reconcile_slot_state(self, slot_id: str) -> SlotState:
+        return SlotState(
+            slot_id=slot_id,
+            status=SlotStatus.ERROR,
+            last_error="RECOVERY_UNSAFE",
+        )
+
+    def reconcile_process_state(self, process_id: str) -> ProcessState:
+        return ProcessState(
+            process_id=process_id,
+            slot_id="unknown",
+            lease_ref="unknown",
+            process_state=ProcessLifecycleState.UNKNOWN,
+            last_error="RECOVERY_UNSAFE",
         )
 
     def get_command_status(self, command_id: str) -> HALCommandStatus:
-        """Get status of a specific command."""
-        if command_id not in self._command_statuses:
-            raise ValueError(f"Unknown command_id: {command_id}")
-        return self._command_statuses[command_id]
-
-    def get_estop_state(self) -> EstopState:
-        """Get current E-Stop state."""
-        return self._estop_state
-
-    def acknowledge_estop(self, acknowledged_by: str) -> EstopState:
-        """Acknowledge an E-Stop event (dummy)."""
-        self._estop_state.acknowledged_by = acknowledged_by
-        return self._estop_state
-
-    def handle_interlock_event(self, event: HardwareInterlockEvent) -> None:
-        """Handle a hardware interlock event (dummy)."""
-        pass
+        return HALCommandStatus(
+            command_id=command_id,
+            lifecycle_state=CommandLifecycleState.RECEIVED,
+            attempts=0,
+            last_update_at=_DUMMY_TIMESTAMP,
+        )
