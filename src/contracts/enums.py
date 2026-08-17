@@ -166,3 +166,43 @@ class RetentionClass(str, Enum):
     NORMAL = "NORMAL"
     SAFETY_HOLD = "SAFETY_HOLD"
     DEVELOPMENT_HOLD = "DEVELOPMENT_HOLD"
+
+
+class SignalType(str, Enum):
+    """SignalType: Typ eines Atlas-Signals."""
+
+    SCIENTIFIC = "SCIENTIFIC"
+    SAFETY = "SAFETY"
+    OPERATIONAL = "OPERATIONAL"
+    SYSTEM = "SYSTEM"
+
+
+class SignalSeverity(str, Enum):
+    """SignalSeverity: Priorität eines Signals für Resolution."""
+
+    RED = "RED"  # Highest priority
+    YELLOW = "YELLOW"
+    PURPLE = "PURPLE"
+    GREEN = "GREEN"
+    WHITE = "WHITE"  # Lowest priority
+
+
+class PackageStatus(str, Enum):
+    """PackageStatus: Status eines ResearchPackage im Archivar."""
+
+    PENDING = "PENDING"
+    ACCEPTED = "ACCEPTED"
+    REJECTED_DUPLICATE = "REJECTED_DUPLICATE"
+    REJECTED_SEQUENCE = "REJECTED_SEQUENCE"
+    DRAFT_RECOVERABLE = "DRAFT_RECOVERABLE"
+    CRYSTALLIZED = "CRYSTALLIZED"
+
+
+class EventType(str, Enum):
+    """EventType: Typ eines Events im Event-Sourcing-Log."""
+
+    OPERATIONAL_EVENT = "OPERATIONAL_EVENT"
+    SCIENTIFIC_SIGNAL = "SCIENTIFIC_SIGNAL"
+    SAFETY_SIGNAL = "SAFETY_SIGNAL"
+    CRYSTAL_CREATED = "CRYSTAL_CREATED"
+    SNAPSHOT_CREATED = "SNAPSHOT_CREATED"

@@ -9,7 +9,7 @@ from src.contracts.atlas_models import Cluster, SignalEvent, Zone
 def _signal_event(**overrides):
     data = {
         "signal_id": "signal-1",
-        "signal_type": "TEST_SIGNAL",
+        "signal_type": "SCIENTIFIC",
         "timestamp": "2026-08-18T00:00:00Z",
     }
     data.update(overrides)
@@ -61,10 +61,12 @@ def test_signal_event_requires_timestamp():
         SignalEvent(**payload)
 
 
-def test_signal_event_defaults_severity_to_info():
-    """Test: severity default ist INFO."""
+def test_signal_event_defaults_severity_to_white():
+    """Test: severity default ist WHITE (SignalSeverity)."""
+    from src.contracts.enums import SignalSeverity
+
     event = SignalEvent(**_signal_event())
-    assert event.severity == "INFO"
+    assert event.severity == SignalSeverity.WHITE
 
 
 def test_signal_event_defaults_acknowledged_false():
