@@ -17,11 +17,20 @@ def _create_signal(
     severity: SignalSeverity = SignalSeverity.WHITE,
 ) -> SignalEvent:
     """Helper to create a SignalEvent."""
+    # Parse coordinate into package_id and zyklus_id
+    if ":" in coordinate:
+        parts = coordinate.split(":", 1)
+        source_package_id = parts[0]
+        source_zyklus_id = parts[1]
+    else:
+        source_package_id = coordinate
+        source_zyklus_id = "default"
+    
     return SignalEvent(
         signal_id=signal_id,
         signal_type=signal_type,
-        source_package_id="pkg-001",
-        source_zyklus_id="zyklus-001",
+        source_package_id=source_package_id,
+        source_zyklus_id=source_zyklus_id,
         timestamp=datetime.now(timezone.utc).isoformat(),
         payload={"value": 42},
         severity=severity,
@@ -105,3 +114,31 @@ def test_signal_stack_is_append_only():
     # Erstes Signal muss unverändert sein
     assert stack_after[0].signal_id == "sig-1"
     assert stack_after[1].signal_id == "sig-2"
+
+
+def test_crystallization_does_not_mutate_stack():
+    """Kristallisation verändert den rohen Signal-Stack nicht."""
+    registry = SignalRegistry()
+
+    # Drei Signale für dieselbe Koordinate (muss package:zyklus Format sein)
+    for i in range(3):
+        signal = _create_signal(f"sig-{i}", coordinate="pkg-crystal:zyklus-test")
+        registry.append_signal(signal)
+
+    # Stack sollte genau 3 Signale enthalten (append-only)
+    stack = registry.get_signal_stack("pkg-crystal:zyklus-test")
+    assert len(stack) == 3
+
+    # Alle Signale sollten ihre ursprünglichen IDs behalten
+    assert stack[0].signal_id == "sig-0"
+    assert stack[1].signal_id == "sig-1"
+    assert stack[2].signal_id == "sig-2"
+
+    # Kristall wurde erzeugt
+    crystals = registry.get_crystals()
+    assert len(crystals) >= 1
+
+    # Stack bleibt unverändert nach Kristallisation
+    stack_after_crystal = registry.get_signal_stack("pkg-crystal:zyklus-test")
+    assert len(stack_after_crystal) == 3
+    assert stack_after_crystal[0].signal_id == "sig-0"

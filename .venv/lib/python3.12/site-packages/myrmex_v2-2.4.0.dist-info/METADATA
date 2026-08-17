@@ -1,0 +1,8 @@
+Metadata-Version: 2.4
+Name: myrmex_v2
+Version: 2.4.0
+Summary: MYRMEX v2.4.0 + Questor v0.2.3 + HAL v0.2.0 Phase 1 contracts and dummies
+Requires-Python: >=3.10
+Requires-Dist: pydantic<3,>=2.7
+Provides-Extra: dev
+Requires-Dist: pytest>=8; extra == "dev"
