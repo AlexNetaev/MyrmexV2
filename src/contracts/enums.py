@@ -206,3 +206,35 @@ class EventType(str, Enum):
     SAFETY_SIGNAL = "SAFETY_SIGNAL"
     CRYSTAL_CREATED = "CRYSTAL_CREATED"
     SNAPSHOT_CREATED = "SNAPSHOT_CREATED"
+
+
+class MissingDataPolicy(str, Enum):
+    """MissingDataPolicy: Behandlung von UNKNOWN-Dimensionen beim Clustering."""
+
+    EXCLUDE_DIMENSION = "EXCLUDE_DIMENSION"
+    IMPUTE_MEDIAN = "IMPUTE_MEDIAN"
+    SEPARATE_CLUSTER = "SEPARATE_CLUSTER"
+
+
+class DimensionStatus(str, Enum):
+    """DimensionStatus: Status einer Dimension in einem Kristall."""
+
+    KNOWN = "KNOWN"
+    UNKNOWN = "UNKNOWN"
+
+
+class ZoneHealth(str, Enum):
+    """ZoneHealth: Gesundheitszustand einer Zone basierend auf fracture_score."""
+
+    STABIL = "STABIL"
+    INSTABIL = "INSTABIL"
+    QUARANTAENE = "QUARANTAENE"
+    GESPERRT = "GESPERRT"
+
+
+class NormalizationPolicy(str, Enum):
+    """NormalizationPolicy: Strategie zur Normalisierung von Koordinaten."""
+
+    MIN_MAX = "MIN_MAX"
+    Z_SCORE = "Z_SCORE"
+    NONE = "NONE"
