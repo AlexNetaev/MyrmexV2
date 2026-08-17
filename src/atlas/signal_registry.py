@@ -46,6 +46,8 @@ class SignalRegistry:
         
         The coordinate is derived from source_package_id and source_zyklus_id.
         If not available, uses a default coordinate.
+        
+        NOTE: Creates a copy of the signal to maintain append-only semantics.
         """
         coordinate = self._get_coordinate(signal)
 
@@ -59,9 +61,19 @@ class SignalRegistry:
 
         # Calculate strength based on decay formula
         strength = 1.0 * (0.5 ** (age_s / half_life_s))
-        signal.payload["strength"] = strength
+        
+        # Create a copy of the signal with updated payload to avoid mutation
+        signal_copy = SignalEvent(
+            signal_id=signal.signal_id,
+            signal_type=signal.signal_type,
+            source_package_id=signal.source_package_id,
+            source_zyklus_id=signal.source_zyklus_id,
+            timestamp=signal.timestamp,
+            payload={**signal.payload, "strength": strength},
+            severity=signal.severity,
+        )
 
-        self._signal_stacks[coordinate].append(signal)
+        self._signal_stacks[coordinate].append(signal_copy)
 
         # Check for crystallization
         self._check_crystallization(coordinate, half_life_s)
