@@ -23,7 +23,7 @@ class TestGateFlowIntegration:
             atlas_version_ref="atlas-v1.0.0",
             ziel="test_target",
             routing_graph=RoutingGraph(max_loop_iterations=10, branch_condition_timeout=30.0),
-            kontext=PackageKontext(kontext_id="ctx-1", domain="test"),
+            kontext=PackageKontext(kontext_id="ctx-1", domaene="test", beschreibung="Test context", erwartete_transformation="Test transformation", domain="test"),
             limits={"temperature": 25.0}
         )
 

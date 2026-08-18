@@ -173,7 +173,9 @@ def _create_valid_package():
         materials_or_resources=["water"],
         kontext=PackageKontext(
             kontext_id="kontext-001",
-            domain="test"
+            domaene="test",
+            beschreibung="Test context",
+            erwartete_transformation="Test transformation"
         ),
         parameter_bounds={"temp": (20.0, 30.0)},
         gefahren_mitigationen=["standard_safety"]
@@ -196,6 +198,9 @@ def _create_package_with_unknown_risk():
         materials_or_resources=["unknown_substance"],
         kontext=PackageKontext(
             kontext_id="kontext-002",
+            domaene="unknown",
+            beschreibung="Test context for unknown risk",
+            erwartete_transformation="Test transformation",
             domain="unknown"
         ),
         parameter_bounds={},
