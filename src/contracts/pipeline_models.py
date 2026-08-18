@@ -513,3 +513,84 @@ class AuditLogEntry(BaseModel):
     details: dict[str, Any] = Field(default_factory=dict)
     timestamp: str = Field(..., min_length=1)
     authority: str | None = None
+
+
+# =============================================================================
+# Phase 10: Pipeline Orchestration Models
+# =============================================================================
+
+class PipelineEventType(str, Enum):
+    """PipelineEventType: Typen von Pipeline-Events."""
+    
+    NEW_CRYSTAL = "NEW_CRYSTAL"
+    NEW_WAYPOINT = "NEW_WAYPOINT"
+    NEW_PACKAGE = "NEW_PACKAGE"
+    GATE_DECISION = "GATE_DECISION"
+    QUESTOR_RESULT = "QUESTOR_RESULT"
+    ESTOP = "ESTOP"
+    SAFE_MODE = "SAFE_MODE"
+    DEADLOCK = "DEADLOCK"
+    PIPELINE_TIMEOUT = "PIPELINE_TIMEOUT"
+
+
+class PipelineEvent(BaseModel):
+    """PipelineEvent: Ein Event in der Pipeline."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    event_id: str = Field(..., min_length=1)
+    event_type: PipelineEventType
+    payload: dict[str, Any] = Field(default_factory=dict)
+    timestamp: str = Field(..., min_length=1)
+    source_stage: str | None = None
+    target_stage: str | None = None
+
+
+class QueueStatus(BaseModel):
+    """QueueStatus: Status einer bounded Queue."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    queue_name: str = Field(..., min_length=1)
+    current_size: int = Field(..., ge=0)
+    high_watermark: int = Field(..., gt=0)
+    low_watermark: int = Field(..., gt=0)
+    is_full: bool = False
+    is_empty: bool = True
+
+
+class DeadlockReport(BaseModel):
+    """DeadlockReport: Bericht über einen erkannten Deadlock."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    detected: bool = True
+    reason: str = Field(..., min_length=1)
+    affected_queues: list[str] = Field(default_factory=list)
+    affected_packages: list[str] = Field(default_factory=list)
+    timestamp: str = Field(..., min_length=1)
+
+
+class NotventilConfig(BaseModel):
+    """NotventilConfig: Konfiguration des Notventils."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    notventil_zyklen: int = Field(default=50, gt=0)
+    avg_zyklen_pro_paket: float = Field(default=25.0, gt=0.0)
+    max_package_lifetime_s: float = Field(default=3600.0, gt=0.0)
+
+
+class PipelineMetrics(BaseModel):
+    """PipelineMetrics: Metriken der Pipeline."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    total_packages_processed: int = 0
+    total_estops: int = 0
+    total_safe_mode_activations: int = 0
+    total_deadlocks_detected: int = 0
+    total_timeouts: int = 0
+    avg_cycle_count_per_package: float = 0.0
+    current_queue_sizes: dict[str, int] = Field(default_factory=dict)
+    timestamp: str = Field(..., min_length=1)
