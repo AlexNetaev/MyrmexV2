@@ -33,6 +33,40 @@ class GateMode(str, Enum):
     SANDBOX = "SANDBOX"
 
 
+class GateDecision(str, Enum):
+    """GateDecision: Entscheidung des Sicherheits-Gates."""
+
+    FREIGEGEBEN = "FREIGEGEBEN"
+    ABGELEHNT = "ABGELEHNT"
+    DISPUTED = "DISPUTED"
+
+
+class RichterResult(str, Enum):
+    """RichterResult: Ergebnis der Richter-Prüfung."""
+
+    RICHTER_PASS = "RICHTER_PASS"
+    RICHTER_REJECT = "RICHTER_REJECT"
+    REGELLUECKE = "REGELLUECKE"
+
+
+class SeherResult(str, Enum):
+    """SeherResult: Ergebnis der Seher-Prüfung."""
+
+    SEHER_PASS = "SEHER_PASS"
+    SEHER_VETO = "SEHER_VETO"
+    SEHER_INVALID_VETO = "SEHER_INVALID_VETO"
+    SEHER_NOT_AVAILABLE = "SEHER_NOT_AVAILABLE"
+    SEHER_NOT_CALLED = "SEHER_NOT_CALLED"
+
+
+class OnboardingStatus(str, Enum):
+    """OnboardingStatus: Status eines Dimension-Onboarding-Requests."""
+
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+
+
 class ResourceClass(str, Enum):
     LAB_ACTUATOR = "LAB_ACTUATOR"
     COMPUTE_NODE = "COMPUTE_NODE"
