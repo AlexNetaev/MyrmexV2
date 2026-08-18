@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from src.contracts.enums import GateMode, GateDecision, RichterResult, SeherResult, OnboardingStatus
+from src.contracts.enums import GateMode, GateDecision, RichterResult, SeherResult, OnboardingStatus, CircuitBreakerState, AppealStatus, AppealDecision, PolicyReviewDecision
 
 
 class Wegmarke(BaseModel):
@@ -96,3 +96,94 @@ class GateRecord(BaseModel):
     dimension_onboarding_requests: list[DimensionOnboardingRequest] = Field(default_factory=list)
 
     physical_execution_allowed: bool = True
+
+
+class SeherVeto(BaseModel):
+    """SeherVeto: Veto des Sehers mit Evidenz."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    veto_grund: str = Field(..., min_length=1)
+    confidence: float = Field(..., ge=0.0, le=1.0)
+    evidence_refs: list[str] = Field(..., min_length=1)
+    policy_ref: str = Field(..., min_length=1)
+
+
+class SeherResultModel(BaseModel):
+    """SeherResultModel: Ergebnis der Seher-Prüfung."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    decision: SeherResult = SeherResult.SEHER_NOT_AVAILABLE
+    veto_grund: str | None = None
+    confidence: float | None = None
+    evidence_refs: list[str] = Field(default_factory=list)
+    policy_ref: str | None = None
+    fallback_used: bool = False
+
+
+class CircuitBreakerMetrics(BaseModel):
+    """CircuitBreakerMetrics: Metriken des Circuit-Breakers."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    invalid_veto_rate: float = Field(default=0.0, ge=0.0, le=1.0)
+    false_block_rate: float = Field(default=0.0, ge=0.0, le=1.0)
+    appeal_success_rate: float = Field(default=0.0, ge=0.0, le=1.0)
+    window_size: int = Field(default=100, ge=1)
+    sample_size: int = Field(default=0, ge=0)
+
+
+class CircuitBreakerAuditEvent(BaseModel):
+    """CircuitBreakerAuditEvent: Audit-Event bei Zustandswechsel."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    old_state: CircuitBreakerState
+    new_state: CircuitBreakerState
+    trigger: str = Field(..., min_length=1)
+    metric_name: str | None = None
+    metric_value: float | None = None
+    window_size: int = Field(..., ge=1)
+    sample_size: int = Field(..., ge=0)
+    timestamp: str = Field(..., min_length=1)
+    authority: str | None = None
+
+
+class Appeal(BaseModel):
+    """Appeal: Berufung bei DISPUTED-Entscheidung."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    appeal_id: str = Field(..., min_length=1)
+    package_id: str = Field(..., min_length=1)
+    seher_veto: SeherVeto | None = None
+    richter_result: RichterResult
+    status: AppealStatus = AppealStatus.PENDING
+
+
+class AppealResolution(BaseModel):
+    """AppealResolution: Auflösung einer Berufung."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    appeal_id: str = Field(..., min_length=1)
+    decision: AppealDecision
+    reason: str = Field(..., min_length=1)
+    resolved_by: str = Field(..., min_length=1)
+    timestamp: str = Field(..., min_length=1)
+
+
+class PolicyVetoReview(BaseModel):
+    """PolicyVetoReview: Review eines Policy-Vetos."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    event_type: str = "policy_veto_review"
+    zyklus_id: str = Field(..., min_length=1)
+    policy_veto_id: str = Field(..., min_length=1)
+    review_decision: PolicyReviewDecision
+    review_reason: str = Field(..., min_length=1)
+    review_timestamp: str = Field(..., min_length=1)
+    review_authority: str = Field(..., min_length=1)
+    escalation_target: str | None = None

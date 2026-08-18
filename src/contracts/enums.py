@@ -49,14 +49,58 @@ class RichterResult(str, Enum):
     REGELLUECKE = "REGELLUECKE"
 
 
-class SeherResult(str, Enum):
-    """SeherResult: Ergebnis der Seher-Prüfung."""
+class SeherDecision(str, Enum):
+    """SeherDecision: Entscheidung des Sehers."""
 
     SEHER_PASS = "SEHER_PASS"
     SEHER_VETO = "SEHER_VETO"
     SEHER_INVALID_VETO = "SEHER_INVALID_VETO"
+    SEHER_INVALID_ACTION = "SEHER_INVALID_ACTION"
     SEHER_NOT_AVAILABLE = "SEHER_NOT_AVAILABLE"
     SEHER_NOT_CALLED = "SEHER_NOT_CALLED"
+
+
+class SeherResult(str, Enum):
+    """SeherResult: Ergebnis der Seher-Prüfung (alias für SeherDecision)."""
+
+    SEHER_PASS = "SEHER_PASS"
+    SEHER_VETO = "SEHER_VETO"
+    SEHER_INVALID_VETO = "SEHER_INVALID_VETO"
+    SEHER_INVALID_ACTION = "SEHER_INVALID_ACTION"
+    SEHER_NOT_AVAILABLE = "SEHER_NOT_AVAILABLE"
+    SEHER_NOT_CALLED = "SEHER_NOT_CALLED"
+
+
+class CircuitBreakerState(str, Enum):
+    """CircuitBreakerState: Zustand des Circuit-Breakers."""
+
+    NORMAL = "NORMAL"
+    SHADOW_MODE = "SHADOW_MODE"
+    TEMP_SUSPENDED = "TEMP_SUSPENDED"
+    PERMANENT_SUSPENDED = "PERMANENT_SUSPENDED"
+
+
+class AppealStatus(str, Enum):
+    """AppealStatus: Status einer Berufung."""
+
+    PENDING = "PENDING"
+    APPEAL_GRANTED = "APPEAL_GRANTED"
+    VETO_CONFIRMED = "VETO_CONFIRMED"
+
+
+class AppealDecision(str, Enum):
+    """AppealDecision: Entscheidung des Kanzlers bei einer Berufung."""
+
+    APPEAL_GRANTED = "APPEAL_GRANTED"
+    VETO_CONFIRMED = "VETO_CONFIRMED"
+
+
+class PolicyReviewDecision(str, Enum):
+    """PolicyReviewDecision: Entscheidung beim Policy-Veto-Review."""
+
+    CONFIRMED = "CONFIRMED"
+    LIFTED = "LIFTED"
+    ESCALATED = "ESCALATED"
 
 
 class OnboardingStatus(str, Enum):
