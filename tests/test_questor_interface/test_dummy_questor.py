@@ -27,7 +27,7 @@ def create_test_envelope():
     """Erstellt Test-Envelope."""
     return QuestorDispatchEnvelope(
         dispatch_id="dispatch-test",
-        zyklus_id=1,
+        zyklus_id="1",
         attempt_id=1,
         package=MockPackage(),
         gate_record_ref="gate-test",
@@ -56,7 +56,7 @@ def test_dummy_questor_returns_questor_ergebnis_paket():
     
     result = questor.execute(envelope)
     
-    assert result.paket_id is not None
+    assert result.package_id is not None
     assert result.dispatch_ref == envelope.dispatch_id
     assert result.status == "erfolgreich"
     assert result.vollstaendig_flag is True

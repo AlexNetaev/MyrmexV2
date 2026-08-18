@@ -47,13 +47,13 @@ def test_dispatcher_builds_envelope():
         gate_record=gate_record,
         lease_grants=lease_grants,
         execution_environment_ref="exec-env-1",
-        zyklus_id=1,
+        zyklus_id="1",
         attempt_id=1,
     )
     
     assert isinstance(envelope, QuestorDispatchEnvelope)
     assert envelope.dispatch_id is not None
-    assert envelope.zyklus_id == 1
+    assert envelope.zyklus_id == "1"
     assert envelope.attempt_id == 1
 
 
@@ -103,7 +103,7 @@ def test_dispatcher_envelope_has_idempotency_key():
         gate_record=gate_record,
         lease_grants=[],
         execution_environment_ref=None,
-        zyklus_id=5,
+        zyklus_id="5",
         attempt_id=3,
     )
     

@@ -18,12 +18,19 @@ from src.contracts.questor_result import (
 def create_valid_ergebnis_paket(dispatch_ref="dispatch-123"):
     """Erstellt ein gültiges QuestorErgebnisPaket."""
     return QuestorErgebnisPaket(
-        paket_id="paket-123",
+        package_id="paket-123",
+        zyklus_id="zyklus-001",
+        attempt_id=1,
+        questor_instance_id="questor-1",
+        sequence_number=1,
+        observed_atlas_version_id="atlas-1.0",
+        paket_id="paket-123",  # Alias für package_id
         dispatch_ref=dispatch_ref,
         status="erfolgreich",
-        abbruch_grund=AbbruchGrund.NONE,
-        abbruch_klasse=None,
+        abbruch_grund=None,  # Bei ERFOLGREICH muss abbruch_grund None sein
+        abbruch_klasse=AbbruchKlasse.OPERATIONAL,
         vollstaendig_flag=True,
+        rohdaten_checksumme="sha256:dummy",
         questor_metadata=QuestorMetadata(
             questor_instance_id="questor-1",
             sequence_number=1,
@@ -49,16 +56,25 @@ def test_receiver_rejects_invalid_package():
     """Regel 4: Ungültiges Paket wird abgelehnt."""
     receiver = ResultReceiver()
     
-    # Ungültiges Paket mit leeren required fields
+    # Ungültiges Paket mit leeren required fields - wir müssen Pydantic umgehen
+    # indem wir ein gültiges Paket erstellen und dann Felder manipulieren
     from src.contracts.questor_result import QuestorMetadata
     
+    # Erstelle ein zunächst gültiges Paket und mache es dann ungültig
     invalid_paket = QuestorErgebnisPaket(
-        paket_id="",  # Leer - ungültig
+        package_id="paket-123",
+        zyklus_id="zyklus-001",
+        attempt_id=1,
+        questor_instance_id="questor-1",
+        sequence_number=1,
+        observed_atlas_version_id="atlas-1.0",
+        paket_id="",  # Leer - ungültig (wird später gesetzt)
         dispatch_ref="",
-        status="",
+        status="erfolgreich",
         abbruch_grund=None,
-        abbruch_klasse=None,
+        abbruch_klasse=AbbruchKlasse.OPERATIONAL,
         vollstaendig_flag=False,
+        rohdaten_checksumme="sha256:dummy",  # Muss erst gültig sein für die Erstellung
         questor_metadata=QuestorMetadata(
             questor_instance_id="",  # Auch leer
             sequence_number=0,
@@ -67,6 +83,11 @@ def test_receiver_rejects_invalid_package():
         signale_fuer_atlas=[],
         domain_metadata={}
     )
+    
+    # Setze package_id und rohdaten_checksumme auf leer nach der Erstellung
+    # Dies testet die Receiver-Validierung, nicht die Pydantic-Validierung
+    object.__setattr__(invalid_paket, 'package_id', '')
+    object.__setattr__(invalid_paket, 'rohdaten_checksumme', '')
     
     result = receiver.receive(invalid_paket)
     
