@@ -67,8 +67,12 @@ class Stufe5bStateMachine(StateMachine):
     def __init__(self, wal: WriteAheadLog):
         super().__init__(wal)
         self.valid_transitions = {
-            Stage5bState.IDEE_OFFEN.value: [Stage5bState.IDEE_GEPRUEFT.value],
+            Stage5bState.IDEE_OFFEN.value: [
+                Stage5bState.IDEE_GEPRUEFT.value,
+                Stage5bState.IDEE_VERWORFEN.value,
+            ],
             Stage5bState.IDEE_GEPRUEFT.value: [Stage5bState.WEGMARKE_PLATZIERT.value],
+            Stage5bState.IDEE_VERWORFEN.value: [],  # Endzustand
             Stage5bState.WEGMARKE_PLATZIERT.value: [],
         }
 

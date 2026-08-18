@@ -1,10 +1,127 @@
 """Pipeline models for MYRMEX v2.4.0."""
 
+from enum import Enum
 from typing import Any
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from src.contracts.enums import GateMode, GateDecision, RichterResult, SeherResult, OnboardingStatus, CircuitBreakerState, AppealStatus, AppealDecision, PolicyReviewDecision
+
+
+# =============================================================================
+# IdeenIntent und EvidenceStatus Enums
+# =============================================================================
+
+class IdeenIntent(str, Enum):
+    """IdeenIntent: Intent einer Forschungsidee."""
+    
+    EXPLORATION = "EXPLORATION"
+    VERFEINERUNG = "VERFEINERUNG"
+    FRACTURE_DIAGNOSIS = "FRACTURE_DIAGNOSIS"
+    MITIGATION = "MITIGATION"
+
+
+class EvidenceStatus(str, Enum):
+    """EvidenceStatus: Status der Evidenz einer Gefahrenhypothese."""
+    
+    BELEGT = "BELEGT"
+    HYPOTHETISCH = "HYPOTHETISCH"
+    UNBEKANNT = "UNBEKANNT"
+
+
+class FilterDecision(str, Enum):
+    """FilterDecision: Entscheidung des Pre-Filters."""
+    
+    ERLAUBEN = "ERLAUBEN"
+    VERWERFEN = "VERWERFEN"
+    DIMENSION_GAP = "DIMENSION_GAP"
+
+
+# =============================================================================
+# GefahrenHypothese Model
+# =============================================================================
+
+class GefahrenHypothese(BaseModel):
+    """GefahrenHypothese: Hypothese über mögliche Gefahren einer Idee."""
+    
+    model_config = ConfigDict(extra="forbid")
+    
+    beschreibung: str = Field(..., min_length=1)
+    evidence_status: EvidenceStatus = EvidenceStatus.HYPOTHETISCH
+    referenzen: list[str] = Field(default_factory=list)
+
+
+# =============================================================================
+# RohIdee Model (erweitert für Phase 7A)
+# =============================================================================
+
+class RohIdee(BaseModel):
+    """RohIdee: Eine initiale Forschungsidee vor der Paketierung."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    idee_id: str = Field(..., min_length=1)
+    intent: IdeenIntent = IdeenIntent.EXPLORATION
+    ziel_koordinate: dict[str, float] = Field(default_factory=dict)
+    beschreibung: str = Field(..., min_length=1)
+    gefahren_hypothese: GefahrenHypothese = Field(default_factory=lambda: GefahrenHypothese(beschreibung="Keine bekannten Gefahren"))
+    proposed_dimensions: list[str] = Field(default_factory=list)
+    atlas_version_ref: str = Field(..., min_length=1)
+    status: str = "OFFEN"
+    
+    # Legacy fields for backward compatibility
+    titel: str | None = None
+    relevante_wegmarken: list[str] = Field(default_factory=list)
+    prioritaet: int = Field(default=0, ge=0, le=10)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    ziel_hypothese: str | None = None
+
+
+# =============================================================================
+# FilterEvent und FilterResult Models
+# =============================================================================
+
+class FilterEvent(BaseModel):
+    """FilterEvent: Protokolliertes Event einer Pre-Filter-Entscheidung."""
+    
+    model_config = ConfigDict(extra="forbid")
+    
+    event_id: str = Field(..., min_length=1)
+    idee_id: str = Field(..., min_length=1)
+    decision: FilterDecision
+    reason: str = Field(..., min_length=1)
+    timestamp: str = Field(..., min_length=1)
+    signal_snapshot: dict[str, str] = Field(default_factory=dict)  # SignalType as string
+
+
+class FilterResult(BaseModel):
+    """FilterResult: Ergebnis der Pre-Filter-Prüfung."""
+    
+    model_config = ConfigDict(extra="forbid")
+    
+    decision: FilterDecision
+    reason: str = Field(..., min_length=1)
+    filter_event: FilterEvent
+
+
+# =============================================================================
+# BlockedCacheEntry Model
+# =============================================================================
+
+class BlockedCacheEntry(BaseModel):
+    """BlockedCacheEntry: Eintrag im blocked_cache des Vordenkers."""
+    
+    model_config = ConfigDict(extra="forbid")
+    
+    idee_id: str = Field(..., min_length=1)
+    grund: str = Field(..., min_length=1)
+    timestamp: str = Field(..., min_length=1)
+
+
+# =============================================================================
+# DimensionOnboardingRequest (bereits vorhanden, wird hier nur referenziert)
+# =============================================================================
 
 
 class Wegmarke(BaseModel):
@@ -19,22 +136,6 @@ class Wegmarke(BaseModel):
 
     required_capabilities: list[str] = Field(default_factory=list)
     parameter_schema_ref: str | None = None
-
-
-class RohIdee(BaseModel):
-    """RohIdee: Eine initiale Forschungsidee vor der Paketierung."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    idee_id: str = Field(..., min_length=1)
-    titel: str = Field(..., min_length=1)
-    beschreibung: str = Field(..., min_length=1)
-
-    ziel_hypothese: str | None = None
-    relevante_wegmarken: list[str] = Field(default_factory=list)
-
-    prioritaet: int = Field(default=0, ge=0, le=10)
-    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class RichterRule(BaseModel):

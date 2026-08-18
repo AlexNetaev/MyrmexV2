@@ -24,6 +24,7 @@ class RecoveryActionType(str, Enum):
 class Stage5bState(str, Enum):
     IDEE_OFFEN = "IDEE_OFFEN"
     IDEE_GEPRUEFT = "IDEE_GEPRUEFT"
+    IDEE_VERWORFEN = "IDEE_VERWORFEN"
     WEGMARKE_PLATZIERT = "WEGMARKE_PLATZIERT"
 
 
