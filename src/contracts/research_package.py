@@ -2,6 +2,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from src.contracts.pipeline_models import PackageKontext
+
 
 ID_PATTERN = r"^[A-Za-z0-9._-]{1,128}$"
 
@@ -12,29 +14,29 @@ class RoutingNode(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     node_id: str = Field(..., min_length=1)
-    node_type: str = Field(..., min_length=1)
+    capability: str = Field(..., min_length=1)
+    slot_id: str = Field(..., min_length=1)
+    parameters: dict[str, Any] = Field(default_factory=dict)
 
+    # Legacy fields for backward compatibility
+    node_type: str | None = None
     capabilities_required: list[str] = Field(default_factory=list)
     successor_nodes: list[str] = Field(default_factory=list)
-
     branch_condition: str | None = None
     timeout_s: float | None = Field(default=None, gt=0.0)
-
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
-class PackageKontext(BaseModel):
-    """PackageKontext: Kontextinformationen für ein ResearchPackage."""
+class RoutingEdge(BaseModel):
+    """RoutingEdge: Eine gerichtete Kante im Routing-Graph."""
 
     model_config = ConfigDict(extra="forbid")
 
-    kontext_id: str = Field(..., min_length=1)
-    parent_package_id: str | None = None
-    related_packages: list[str] = Field(default_factory=list)
-
-    domain: str | None = None
-    tags: list[str] = Field(default_factory=list)
-
+    from_node: str = Field(..., min_length=1)
+    to_node: str = Field(..., min_length=1)
+    condition: str = Field(..., min_length=1)
+    
+    priority: int = Field(default=0, ge=0)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -45,7 +47,12 @@ class RoutingGraph(BaseModel):
     branch_condition_timeout: float = Field(..., gt=0.0)
 
     nodes: list[RoutingNode] = Field(default_factory=list)
+    edges: list[RoutingEdge] = Field(default_factory=list)
     entry_node_id: str | None = None
+
+
+# PackageKontext wird jetzt aus pipeline_models.py importiert
+# Hier nur als Forward-Reference für Typ-Checks belassen
 
 
 class ResearchPackage(BaseModel):

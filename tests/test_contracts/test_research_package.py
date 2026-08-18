@@ -102,11 +102,15 @@ def test_routing_node_creation():
     """Test: RoutingNode kann erstellt werden."""
     node = RoutingNode(
         node_id="node-1",
+        capability="compute",
+        slot_id="slot-1",
         node_type="COMPUTE",
         capabilities_required=["dummy"],
     )
 
     assert node.node_id == "node-1"
+    assert node.capability == "compute"
+    assert node.slot_id == "slot-1"
     assert node.node_type == "COMPUTE"
     assert node.capabilities_required == ["dummy"]
 
@@ -115,11 +119,17 @@ def test_package_kontext_creation():
     """Test: PackageKontext kann erstellt werden."""
     kontext = PackageKontext(
         kontext_id="kontext-1",
+        domaene="test-domain",
+        beschreibung="Testbeschreibung",
+        erwartete_transformation="Testtransformation",
         domain="test-domain",
         tags=["tag1", "tag2"],
     )
 
     assert kontext.kontext_id == "kontext-1"
+    assert kontext.domaene == "test-domain"
+    assert kontext.beschreibung == "Testbeschreibung"
+    assert kontext.erwartete_transformation == "Testtransformation"
     assert kontext.domain == "test-domain"
     assert kontext.tags == ["tag1", "tag2"]
 
@@ -128,6 +138,9 @@ def test_research_package_with_package_kontext():
     """Test: ResearchPackage kann mit PackageKontext erstellt werden."""
     kontext = PackageKontext(
         kontext_id="kontext-1",
+        domaene="test-domain",
+        beschreibung="Testbeschreibung",
+        erwartete_transformation="Testtransformation",
         domain="test-domain",
     )
 

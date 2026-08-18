@@ -362,3 +362,53 @@ class LotseResult(BaseModel):
     wegmarke: Wegmarke | None = None
     reason: str = Field(..., min_length=1)
     lotse_event: LotseEvent | None = None
+
+
+# =============================================================================
+# Phase 8A: Quartiermeister Models
+# =============================================================================
+
+class QuartiermeisterState(str, Enum):
+    """QuartiermeisterState: Zustände der Quartiermeister-Zustandsmaschine."""
+    
+    WEGMARKE_RESERVIERT = "WEGMARKE_RESERVIERT"
+    PAKET_ENTWURF = "PAKET_ENTWURF"
+    LOCKED_GATE_PENDING = "LOCKED_GATE_PENDING"
+    GATE_APPROVED = "GATE_APPROVED"
+    LOCKED_READY_TO_EXEC = "LOCKED_READY_TO_EXEC"
+    PAKET_FERTIG = "PAKET_FERTIG"
+    PAKET_VERWORFEN = "PAKET_VERWORFEN"
+
+
+class LeaseReservation(BaseModel):
+    """LeaseReservation: Kurzlebige Resource Reservation beim Resource Governor."""
+    
+    model_config = ConfigDict(extra="forbid")
+    
+    reservation_id: str = Field(..., min_length=1)
+    package_id: str = Field(..., min_length=1)
+    slot_ids: list[str] = Field(default_factory=list)
+    ttl_s: float = Field(..., gt=0.0)
+    status: str = Field(..., min_length=1)  # ACTIVE, EXPIRED, RELEASED
+    created_at: str = Field(..., min_length=1)
+
+
+
+
+
+class PackageKontext(BaseModel):
+    """PackageKontext: Kontextinformationen für ein ResearchPackage (Phase 8A)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    kontext_id: str = Field(..., min_length=1)
+    domaene: str = Field(..., min_length=1)
+    beschreibung: str = Field(..., min_length=1)
+    erwartete_transformation: str = Field(..., min_length=1)
+
+    # Legacy fields for backward compatibility
+    parent_package_id: str | None = None
+    related_packages: list[str] = Field(default_factory=list)
+    domain: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)

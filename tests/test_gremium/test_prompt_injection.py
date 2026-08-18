@@ -81,6 +81,9 @@ def _create_valid_package():
         materials_or_resources=["water"],
         kontext=PackageKontext(
             kontext_id="kontext-injection",
+            domaene="test",
+            beschreibung="Test context for injection",
+            erwartete_transformation="Test transformation",
             domain="test"
         ),
         parameter_bounds={"temp": (20.0, 30.0)},
