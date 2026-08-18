@@ -412,3 +412,104 @@ class PackageKontext(BaseModel):
     domain: str | None = None
     tags: list[str] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+# =============================================================================
+# Phase 9: Kanzler + Königin-Interface Models
+# =============================================================================
+
+class IssuedBy(str, Enum):
+    """IssuedBy: Herkunft einer königlichen Weisung."""
+    
+    HUMAN = "HUMAN"
+    LLM = "LLM"
+
+
+class WeisungsStatus(str, Enum):
+    """WeisungsStatus: Status der Weisungsverarbeitung."""
+    
+    AKZEPTIERT = "AKZEPTIERT"
+    KONFLIKT = "KONFLIKT"
+    ABGELEHNT = "ABGELEHNT"
+
+
+class SafeModeState(str, Enum):
+    """SafeModeState: Zustände des SAFE_MODE."""
+    
+    INACTIVE = "INACTIVE"
+    ACTIVE = "ACTIVE"
+    COOLDOWN = "COOLDOWN"
+
+
+class RealitaetsCheckStatus(str, Enum):
+    """RealitaetsCheckStatus: Ergebnis des Realitäts-Checks."""
+    
+    OK = "OK"
+    KONFLIKT = "KONFLIKT"
+    WARNUNG = "WARNUNG"
+
+
+class Lagebericht(BaseModel):
+    """Lagebericht: Umfassender Bericht über den Systemzustand."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    lagebericht_id: str = Field(..., min_length=1)
+    pipeline_state_summary: dict[str, Any] = Field(default_factory=dict)
+    resource_capacity_summary: dict[str, Any] = Field(default_factory=dict)
+    signal_provenance: dict[str, str] = Field(default_factory=dict)
+    seher_circuit_breaker_status: CircuitBreakerState = CircuitBreakerState.NORMAL
+    timestamp: str = Field(..., min_length=1)
+
+
+class KoeniglicheWeisung(BaseModel):
+    """KoeniglicheWeisung: Direkte Anweisung der Königin an das System."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    weisungs_id: str = Field(..., min_length=1)
+    bestaetigung: str = Field(..., min_length=1)  # Bestätigungstext der Königin
+    fokus_verschiebung: list[str] = Field(default_factory=list)  # Liste von Zone-IDs
+    neues_ziel: str | None = None
+    stopp: list[str] = Field(default_factory=list)  # Liste von Zone-IDs zum Stoppen
+    prioritaeten: list[str] = Field(default_factory=list)
+    resource_budget: dict[str, Any] = Field(default_factory=dict)
+    issued_by: IssuedBy = IssuedBy.LLM
+    timestamp: str = Field(..., min_length=1)
+
+
+class WeisungsResultat(BaseModel):
+    """WeisungsResultat: Ergebnis der Weisungsverarbeitung."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    status: WeisungsStatus
+    sonderbericht: str | None = None
+    safe_mode_triggered: bool = False
+    realitaets_check_status: RealitaetsCheckStatus = RealitaetsCheckStatus.OK
+    konflikt_details: list[str] = Field(default_factory=list)
+    processed_at: str = Field(..., min_length=1)
+
+
+class SafeModeConfig(BaseModel):
+    """SafeModeConfig: Konfiguration des SAFE_MODE."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    safe_mode_ttl: float = Field(default=300.0, gt=0.0)  # Sekunden
+    cooldown_period: float = Field(default=60.0, gt=0.0)  # Sekunden
+    allow_low_risk_completion: bool = True
+
+
+class AuditLogEntry(BaseModel):
+    """AuditLogEntry: Eintrag im Audit-Log."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    entry_id: str = Field(..., min_length=1)
+    weisungs_id: str | None = None
+    action: str = Field(..., min_length=1)
+    result: str = Field(..., min_length=1)
+    details: dict[str, Any] = Field(default_factory=dict)
+    timestamp: str = Field(..., min_length=1)
+    authority: str | None = None
