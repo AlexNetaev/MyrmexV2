@@ -69,6 +69,7 @@ class RohIdee(BaseModel):
     proposed_dimensions: list[str] = Field(default_factory=list)
     atlas_version_ref: str = Field(..., min_length=1)
     status: str = "OFFEN"
+    fracture_diagnosis_budget: float | None = None
     
     # Legacy fields for backward compatibility
     titel: str | None = None
@@ -293,3 +294,71 @@ class PolicyVetoReview(BaseModel):
     review_timestamp: str = Field(..., min_length=1)
     review_authority: str = Field(..., min_length=1)
     escalation_target: str | None = None
+
+
+# =============================================================================
+# Phase 7B: Lotse Models
+# =============================================================================
+
+class WegmarkeTyp(str, Enum):
+    """WegmarkeTyp: Typ einer Wegmarke."""
+    
+    NORMAL = "NORMAL"
+    DIAGNOSTIC = "DIAGNOSTIC"
+
+
+class WegmarkeStatus(str, Enum):
+    """WegmarkeStatus: Status einer Wegmarke."""
+    
+    PLATZIERT = "PLATZIERT"
+    VERWORFEN = "VERWORFEN"
+    ZURUECKGESTELLT = "ZURUECKGESTELLT"
+    BLOCKIERT = "BLOCKIERT"
+
+
+class LotseDecision(str, Enum):
+    """LotseDecision: Entscheidung des Lotsen."""
+    
+    PLATZIEREN = "PLATZIEREN"
+    VERWERFEN = "VERWERFEN"
+    ZURUECKSTELLEN = "ZURUECKSTELLEN"
+
+
+class Wegmarke(BaseModel):
+    """Wegmarke: Eine platzierte Wegmarke im Atlas."""
+    
+    model_config = ConfigDict(extra="forbid")
+    
+    wegmarke_id: str = Field(..., min_length=1)
+    idee_id: str = Field(..., min_length=1)
+    ziel_koordinate: dict[str, float] = Field(default_factory=dict)
+    wegmarke_typ: WegmarkeTyp = WegmarkeTyp.NORMAL
+    atlas_version_ref: str = Field(..., min_length=1)
+    signal_snapshot_version: str = Field(..., min_length=1)
+    fracture_diagnosis_budget: float | None = None
+    status: WegmarkeStatus = WegmarkeStatus.PLATZIERT
+    platzierungs_timestamp: str = Field(..., min_length=1)
+
+
+class LotseEvent(BaseModel):
+    """LotseEvent: Protokolliertes Event einer Lotse-Entscheidung."""
+    
+    model_config = ConfigDict(extra="forbid")
+    
+    event_id: str = Field(..., min_length=1)
+    idee_id: str = Field(..., min_length=1)
+    decision: LotseDecision
+    signal_snapshot: dict[str, str] = Field(default_factory=dict)
+    atlas_version_ref: str = Field(..., min_length=1)
+    timestamp: str = Field(..., min_length=1)
+
+
+class LotseResult(BaseModel):
+    """LotseResult: Ergebnis der Lotse-Prüfung."""
+    
+    model_config = ConfigDict(extra="forbid")
+    
+    decision: LotseDecision
+    wegmarke: Wegmarke | None = None
+    reason: str = Field(..., min_length=1)
+    lotse_event: LotseEvent | None = None
