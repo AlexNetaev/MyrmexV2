@@ -153,13 +153,15 @@ class CircuitBreakerAuditEvent(BaseModel):
 class Appeal(BaseModel):
     """Appeal: Berufung bei DISPUTED-Entscheidung."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     appeal_id: str = Field(..., min_length=1)
     package_id: str = Field(..., min_length=1)
     seher_veto: SeherVeto | None = None
     richter_result: RichterResult
     status: AppealStatus = AppealStatus.PENDING
+    gate_mode: str | None = None
+    created_at: str | None = None
 
 
 class AppealResolution(BaseModel):

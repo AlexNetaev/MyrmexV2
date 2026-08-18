@@ -1,4 +1,4 @@
-```gitignore
+```
 # Python
 __pycache__/
 *.pyc
@@ -13,21 +13,15 @@ env/
 .env.local
 .env.*
 
-# Logs
+# Logs and temporary files
 *.log
-
-# Tests
-.pytest_cache/
-.coverage
-coverage/
-htmlcov/
+*.tmp
+*.swp
+*.swo
 
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
-*.tmp
 
 # OS
 .DS_Store
