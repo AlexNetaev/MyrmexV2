@@ -1,41 +1,6 @@
 ```
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+# Distribution / packaging
 *.egg-info/
-
-# Dependencies
-.venv/
-venv/
-env/
-.env
-.env.local
-.env.*
-
-# Build artifacts
-build/
 dist/
-*.so
-*.dylib
-*.dll
-
-# Editors
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Logs
-*.log
-
-# Coverage
-.coverage
-coverage/
-htmlcov/
-
-# Temporary files
-*.tmp
-*.temp
+build/
 ```

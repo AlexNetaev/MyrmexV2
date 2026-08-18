@@ -96,13 +96,13 @@ class TestDBSCANClustering:
             _create_kristall("k4", koordinaten={"x": 0.92, "y": 0.91}),
         ]
 
-        clusters = service.cluster_crystals(
+        clusters, zones = service.cluster_crystals(
             kristalle,
             zone_id="zone-1",
             atlas_version_ref="v1",
         )
 
-        # Sollte mindestens 2 Cluster bilden
+        # Sollte mindestens 1 Cluster bilden
         assert len(clusters) >= 1
         # Alle Kristalle sollten in Clustern sein
         all_clustered_ids = set()
@@ -143,7 +143,7 @@ class TestDBSCANClustering:
         ]
 
         # Die z-Dimension sollte ausgeschlossen werden, nicht als 0 behandelt
-        clusters = service.cluster_crystals(kristalle, zone_id="zone-1", atlas_version_ref="v1")
+        clusters, zones = service.cluster_crystals(kristalle, zone_id="zone-1", atlas_version_ref="v1")
 
         # Beide Kristalle sollten basierend auf x,y geclustert werden
         assert len(clusters) >= 1
@@ -172,7 +172,7 @@ class TestDBSCANClustering:
         ]
 
         # Sollte keine Exception werfen und UNKNOWN korrekt behandeln
-        clusters = service.cluster_crystals(kristalle, zone_id="zone-1", atlas_version_ref="v1")
+        clusters, zones = service.cluster_crystals(kristalle, zone_id="zone-1", atlas_version_ref="v1")
         assert len(clusters) >= 0  # Mindestens leer erlaubt
 
     def test_missing_data_policy_exclude_dimension(self):
@@ -198,7 +198,7 @@ class TestDBSCANClustering:
             ),
         ]
 
-        clusters = service.cluster_crystals(kristalle, zone_id="zone-1", atlas_version_ref="v1")
+        clusters, zones = service.cluster_crystals(kristalle, zone_id="zone-1", atlas_version_ref="v1")
         # y-Dimension sollte ausgeschlossen sein, nur x wird verwendet
         assert len(clusters) >= 0
 
@@ -225,7 +225,7 @@ class TestDBSCANClustering:
             ),
         ]
 
-        clusters = service.cluster_crystals(kristalle, zone_id="zone-1", atlas_version_ref="v1")
+        clusters, zones = service.cluster_crystals(kristalle, zone_id="zone-1", atlas_version_ref="v1")
         assert len(clusters) >= 0
 
     def test_normalization_applied_before_clustering(self):
@@ -249,7 +249,7 @@ class TestDBSCANClustering:
             _create_kristall("k2", koordinaten={"x": 12.0}, dimension_status={"x": DimensionStatus.KNOWN}),
         ]
 
-        clusters = service.cluster_crystals(kristalle, zone_id="zone-1", atlas_version_ref="v1")
+        clusters, zones = service.cluster_crystals(kristalle, zone_id="zone-1", atlas_version_ref="v1")
         # Nach Normalisierung sind 10 und 12 sehr nah (0.1 und 0.12)
         assert len(clusters) >= 1
 
@@ -385,8 +385,8 @@ class TestImmutability:
         schema = _create_dimension_schema()
         service = ClusteringService(schema)
 
-        clusters = service.cluster_crystals(kristalle, zone_id="zone-1", atlas_version_ref="v1")
-        cluster_ids = [c.cluster_id for c in clusters]
+        clusters_v1, zones_v1 = service.cluster_crystals(kristalle, zone_id="zone-1", atlas_version_ref="v1")
+        cluster_ids = [c.cluster_id for c in clusters_v1]
 
         zone_v1 = create_zone_v2(
             zone_id="zone-1",
@@ -398,7 +398,7 @@ class TestImmutability:
 
         # Erstelle neue Version mit zusätzlichem Kristall (instabil)
         kristalle_v2 = kristalle + [_create_kristall("k2", confirmation_count=1, decay=0.3)]
-        clusters_v2 = service.cluster_crystals(kristalle_v2, zone_id="zone-1", atlas_version_ref="v2")
+        clusters_v2, zones_v2 = service.cluster_crystals(kristalle_v2, zone_id="zone-1", atlas_version_ref="v2")
         cluster_ids_v2 = [c.cluster_id for c in clusters_v2]
 
         zone_v2 = create_zone_v2(
@@ -427,7 +427,7 @@ class TestImmutability:
         schema = _create_dimension_schema()
         service = ClusteringService(schema, eps=0.3, min_samples=2)
 
-        clusters_v1 = service.cluster_crystals(
+        clusters_v1, zones_v1 = service.cluster_crystals(
             kristalle,
             zone_id="zone-1",
             atlas_version_ref="v1",
@@ -438,7 +438,7 @@ class TestImmutability:
 
         # Füge neuen Kristall hinzu
         kristalle_v2 = kristalle + [_create_kristall("k3", koordinaten={"x": 0.11, "y": 0.12})]
-        clusters_v2 = service.cluster_crystals(
+        clusters_v2, zones_v2 = service.cluster_crystals(
             kristalle_v2,
             zone_id="zone-1",
             atlas_version_ref="v2",
