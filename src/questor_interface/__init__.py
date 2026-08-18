@@ -1,15 +1,13 @@
-"""Questor interface package for MYRMEX v2.4.0."""
+"""Questor Interface Module."""
+from .package_dispatcher import PackageDispatcher, DispatchResult, ValidationResult
+from .result_receiver import ResultReceiver, ReceiveResult
+from .dummy_questor import DummyQuestor
 
-from typing import Protocol, runtime_checkable
-
-from src.contracts.questor_dispatch import QuestorDispatchEnvelope
-from src.contracts.questor_result import QuestorErgebnisPaket
-
-
-@runtime_checkable
-class QuestorInterface(Protocol):
-    """Questor interface for MYRMEX v2.4.0 / Questor v0.2.3."""
-
-    def execute(self, dispatch: QuestorDispatchEnvelope) -> QuestorErgebnisPaket:
-        """Execute a research package dispatch and return results."""
-        ...
+__all__ = [
+    "PackageDispatcher",
+    "DispatchResult",
+    "ValidationResult",
+    "ResultReceiver",
+    "ReceiveResult",
+    "DummyQuestor",
+]
