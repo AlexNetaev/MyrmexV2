@@ -84,6 +84,7 @@ class AppealStatus(str, Enum):
     """AppealStatus: Status einer Berufung."""
 
     PENDING = "PENDING"
+    DISPUTED = "DISPUTED"
     APPEAL_GRANTED = "APPEAL_GRANTED"
     VETO_CONFIRMED = "VETO_CONFIRMED"
 
