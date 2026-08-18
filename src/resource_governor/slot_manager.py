@@ -1,6 +1,6 @@
 """Slot Manager for MYRMEX v2.4.0 Resource Governor."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from threading import Lock
 from typing import Optional
 
@@ -17,7 +17,7 @@ class Slot(BaseModel):
     slot_id: str = Field(..., min_length=1)
     state: SlotStatus = SlotStatus.FREE
     current_lease_id: str | None = None
-    last_state_change_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    last_state_change_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     estop_suspended_at: str | None = None
     maintenance_reason: str | None = None
     offline_reason: str | None = None
@@ -73,7 +73,7 @@ class SlotManager:
             # Atomar: Prüfe und setze in einer Operation
             slot.state = SlotStatus.RESERVED
             slot.current_lease_id = lease_id
-            slot.last_state_change_at = datetime.utcnow().isoformat()
+            slot.last_state_change_at = datetime.now(timezone.utc).isoformat()
             return True
 
     def release_slot(self, slot_id: str, lease_id: str) -> bool:
@@ -92,7 +92,7 @@ class SlotManager:
             
             slot.state = SlotStatus.FREE
             slot.current_lease_id = None
-            slot.last_state_change_at = datetime.utcnow().isoformat()
+            slot.last_state_change_at = datetime.now(timezone.utc).isoformat()
             return True
 
     def activate_slot(self, slot_id: str, lease_id: str) -> bool:
@@ -106,7 +106,7 @@ class SlotManager:
                 return False
             
             slot.state = SlotStatus.ACTIVE
-            slot.last_state_change_at = datetime.utcnow().isoformat()
+            slot.last_state_change_at = datetime.now(timezone.utc).isoformat()
             return True
 
     def suspend_slot_for_estop(self, slot_id: str) -> bool:
@@ -125,8 +125,8 @@ class SlotManager:
             
             previous_state = slot.state
             slot.state = SlotStatus.ESTOP_SUSPENDED
-            slot.estop_suspended_at = datetime.utcnow().isoformat()
-            slot.last_state_change_at = datetime.utcnow().isoformat()
+            slot.estop_suspended_at = datetime.now(timezone.utc).isoformat()
+            slot.last_state_change_at = datetime.now(timezone.utc).isoformat()
             return True
 
     def reset_slot_after_estop(self, slot_id: str, authorized_by: str) -> bool:
@@ -147,7 +147,7 @@ class SlotManager:
             slot.state = SlotStatus.FREE
             slot.current_lease_id = None
             slot.estop_suspended_at = None
-            slot.last_state_change_at = datetime.utcnow().isoformat()
+            slot.last_state_change_at = datetime.now(timezone.utc).isoformat()
             return True
 
     def set_slot_maintenance(self, slot_id: str, reason: str) -> bool:
@@ -159,7 +159,7 @@ class SlotManager:
             slot = self._slots[slot_id]
             slot.state = SlotStatus.MAINTENANCE
             slot.maintenance_reason = reason
-            slot.last_state_change_at = datetime.utcnow().isoformat()
+            slot.last_state_change_at = datetime.now(timezone.utc).isoformat()
             return True
 
     def set_slot_offline(self, slot_id: str, reason: str) -> bool:
@@ -171,7 +171,7 @@ class SlotManager:
             slot = self._slots[slot_id]
             slot.state = SlotStatus.OFFLINE
             slot.offline_reason = reason
-            slot.last_state_change_at = datetime.utcnow().isoformat()
+            slot.last_state_change_at = datetime.now(timezone.utc).isoformat()
             return True
 
     def list_slots(self) -> list[str]:

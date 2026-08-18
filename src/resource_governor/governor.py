@@ -1,6 +1,6 @@
 """Resource Governor for MYRMEX v2.4.0."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from threading import Lock
 from typing import Optional
 import uuid
@@ -36,11 +36,11 @@ class GovernorLease:
         self.granted_at: str | None = None
         self.expires_at: str | None = None
         self.last_heartbeat_at: str | None = None
-        self.created_at = datetime.utcnow()
+        self.created_at = datetime.now(timezone.utc)
 
     def to_status(self) -> LeaseStatus:
         """Konvertiert zu LeaseStatus für externe Nutzung."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         remaining_ttl = None
         if self.expires_at:
             expires = datetime.fromisoformat(self.expires_at)
@@ -121,7 +121,7 @@ class ResourceGovernor:
             
             # Slot frei → Lease gewähren
             lease_id = f"lease_{uuid.uuid4().hex[:12]}"
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             expires_at = (now + timedelta(seconds=ttl_s)).isoformat()
             
             # Atomare Slot-Vergabe
@@ -178,7 +178,7 @@ class ResourceGovernor:
             if lease.status not in (LeaseStatusName.GRANTED, LeaseStatusName.ACTIVE):
                 return False
             
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             
             # Prüfe ob vorheriger Heartbeat noch im erlaubten Fenster war
             if lease.heartbeat_interval_s > 0 and lease.last_heartbeat_at is not None:
@@ -200,7 +200,7 @@ class ResourceGovernor:
         Markiert sie als EXPIRED.
         """
         expired = []
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         
         with self._lock:
             for lease_id, lease in list(self._leases.items()):
@@ -274,7 +274,7 @@ class ResourceGovernor:
 
     def _record_lease_denied(self, slot_id: str) -> None:
         """Recorded LEASE_DENIED für Resource Pressure Detection."""
-        now = datetime.utcnow().timestamp()
+        now = datetime.now(timezone.utc).timestamp()
         if slot_id not in self._lease_denied_counts:
             self._lease_denied_counts[slot_id] = []
         self._lease_denied_counts[slot_id].append(now)
@@ -296,7 +296,7 @@ class ResourceGovernor:
         
         Regel 5: resource_pressure_event ist OPERATIONAL, nicht SCIENTIFIC.
         """
-        now = datetime.utcnow().timestamp()
+        now = datetime.now(timezone.utc).timestamp()
         cutoff = now - window_s
         
         with self._lock:
