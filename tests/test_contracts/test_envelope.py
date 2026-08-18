@@ -25,6 +25,9 @@ def _envelope_payload(**overrides):
         "attempt_id": 2,
         "package": _package(),
         "gate_record_ref": "gate-1",
+        "gate_mode": "STRICT",
+        "security_mode": "DEV_SANDBOX_ONLY",
+        "idempotency_key": "pkg-001:zyklus-014:2",
         "dispatch_timestamp": "2026-08-18T00:00:00Z",
     }
     data.update(overrides)

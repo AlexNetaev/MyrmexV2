@@ -64,7 +64,7 @@ class PackageDispatcher:
         execution_environment_ref: Optional[str],
         dispatch_mode: str = "PRODUCTION",
         security_mode: SecurityMode = SecurityMode.PHYSICAL_ALLOWED,
-        zyklus_id: int = 1,
+        zyklus_id: str = "zyklus-001",
         attempt_id: int = 1,
     ) -> QuestorDispatchEnvelope:
         """

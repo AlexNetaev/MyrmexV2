@@ -26,7 +26,7 @@ def create_test_envelope():
     """Erstellt Test-Envelope."""
     return QuestorDispatchEnvelope(
         dispatch_id="dispatch-int",
-        zyklus_id=1,
+        zyklus_id="zyklus-001",
         attempt_id=1,
         package=MockPackage(),
         gate_record_ref="gate-integration",
@@ -39,7 +39,7 @@ def create_test_envelope():
             status="GRANTED"
         )],
         security_mode=SecurityMode.PHYSICAL_ALLOWED,
-        idempotency_key="pkg-integration:1:1",
+        idempotency_key="pkg-integration:zyklus-001:1",
     )
 
 

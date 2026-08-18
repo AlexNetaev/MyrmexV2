@@ -38,3 +38,6 @@ class QuestorMetadata(BaseModel):
     policy_version: str | None = None
     local_audit: LocalAuditRef | None = None
     operational_metrics: OperationalMetrics | None = None
+    # Felder für Questor-Instanz und Sequenz (von Tests erwartet)
+    questor_instance_id: str | None = None
+    sequence_number: int | None = None

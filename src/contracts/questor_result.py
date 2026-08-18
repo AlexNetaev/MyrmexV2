@@ -4,8 +4,12 @@ from typing import Any, Optional
 from pydantic import BaseModel, Field, ConfigDict, model_validator
 from enum import Enum
 
-from src.contracts.enums import ErgebnisStatus, AbbruchKlasse as AbbruchKlasseEnum
+from src.contracts.enums import ErgebnisStatus, AbbruchKlasse as AbbruchKlasseEnum, AbbruchKlasse
 from src.contracts.questor_metadata import QuestorMetadata
+
+
+# Exportiere AbbruchKlasse und AbbruchGrund für andere Module
+__all__ = ["QuestorErgebnisPaket", "AbbruchKlasse", "AbbruchGrund", "LocalAuditRef", "OperationalMetrics"]
 
 
 class AbbruchGrund(str, Enum):
@@ -46,7 +50,7 @@ class QuestorErgebnisPaket(BaseModel):
     Alle alten Felder sind vorhanden, neue Felder sind optional.
     """
     # Alte Pflichtfelder (müssen bleiben für Archivar-Kompatibilität)
-    package_id: str = Field(..., description="Eindeutige Paket-ID", min_length=1)
+    package_id: str = Field(..., description="Eindeutige Paket-ID", min_length=1, pattern=r"^[a-zA-Z0-9_-]+$")
     zyklus_id: str = Field(..., description="Zyklus-ID", pattern=r"^[a-zA-Z0-9_-]+$")
     attempt_id: int = Field(..., description="Attempt-ID", ge=1, le=999)
     questor_instance_id: str = Field(..., description="Questor-Instanz-ID")
@@ -77,6 +81,21 @@ class QuestorErgebnisPaket(BaseModel):
     def idempotency_key(self) -> str:
         """Berechnet den Idempotenz-Schlüssel aus package_id:zyklus_id:attempt_id."""
         return f"{self.package_id}:{self.zyklus_id}:{self.attempt_id}"
+    
+    @model_validator(mode='before')
+    @classmethod
+    def validate_idempotency_key_format(cls, data: Any) -> Any:
+        """Validiert, dass der idempotency_key keine führenden Nullen hat."""
+        if isinstance(data, dict):
+            idempotency_key = data.get('idempotency_key')
+            if idempotency_key is not None:
+                # Prüfe auf führende Nullen im attempt_id-Teil
+                parts = idempotency_key.split(':')
+                if len(parts) == 3:
+                    attempt_part = parts[2]
+                    if attempt_part != attempt_part.lstrip('0') or (attempt_part == '0' and len(attempt_part) > 1):
+                        raise ValueError("Idempotency-Key darf keine führenden Nullen im attempt_id-Teil haben")
+        return data
     
     @model_validator(mode='after')
     def validate_abbruch_consistency(self) -> 'QuestorErgebnisPaket':

@@ -7,10 +7,14 @@ from src.contracts.questor_dispatch import QuestorDispatchEnvelope, SecurityMode
 from src.contracts.questor_result import (
     QuestorErgebnisPaket,
     QuestorMetadata,
-    LocalAuditRef,
-    OperationalMetrics,
     AbbruchKlasse,
     AbbruchGrund,
+)
+from src.contracts.enums import ErgebnisStatus
+# Importiere LocalAuditRef und OperationalMetrics aus questor_metadata, nicht aus questor_result
+from src.contracts.questor_metadata import (
+    LocalAuditRef,
+    OperationalMetrics,
 )
 
 
@@ -57,27 +61,28 @@ class DummyQuestor:
             questor_instance_id=questor_instance_id,
             sequence_number=self._sequence_counter[questor_instance_id],
             local_audit=LocalAuditRef(
-                audit_id=f"audit-{uuid.uuid4().hex[:8]}",
                 blackbox_id=f"blackbox-{uuid.uuid4().hex[:8]}",
-                trail_hash=f"hash-{uuid.uuid4().hex[:8]}"
+                manifest_checksum=f"sha256-{uuid.uuid4().hex[:8]}",
+                blackbox_digest=f"digest-{uuid.uuid4().hex[:8]}",
+                access_policy_summary="test-policy"
             ),
-            operational_metrics=OperationalMetrics(
-                runtime_s=0.5,
-                memory_peak_mb=128.0,
-                cpu_percent=25.0,
-                loop_iterations=1,
-                branch_evaluations=0
-            )
+            operational_metrics=OperationalMetrics()
         )
         
         # Erfolgreiches Ergebnis
         result = QuestorErgebnisPaket(
-            paket_id=str(uuid.uuid4()),
-            dispatch_ref=envelope.dispatch_id,
-            status="erfolgreich",
-            abbruch_grund=AbbruchGrund.NONE,
-            abbruch_klasse=None,
+            package_id=envelope.package.package_id if hasattr(envelope.package, 'package_id') else "pkg-001",
+            zyklus_id=envelope.zyklus_id,
+            attempt_id=envelope.attempt_id,
+            questor_instance_id=questor_instance_id,
+            sequence_number=self._sequence_counter[questor_instance_id],
+            observed_atlas_version_id="atlas-1",
+            status=ErgebnisStatus.ERFOLGREICH,
+            abbruch_grund=None,
+            abbruch_klasse=AbbruchKlasse.OPERATIONAL,
             vollstaendig_flag=True,
+            rohdaten_checksumme="sha256:dummy",
+            dispatch_ref=envelope.dispatch_id,
             questor_metadata=metadata,
             ergebnis_zusammenfassung="Simulation erfolgreich abgeschlossen",
             signale_fuer_atlas=[],
@@ -122,27 +127,27 @@ class DummyQuestor:
             questor_instance_id=questor_instance_id,
             sequence_number=self._sequence_counter[questor_instance_id],
             local_audit=LocalAuditRef(
-                audit_id=f"audit-{uuid.uuid4().hex[:8]}",
                 blackbox_id=f"blackbox-{uuid.uuid4().hex[:8]}",
-                trail_hash=f"hash-{uuid.uuid4().hex[:8]}"
+                manifest_checksum=f"sha256-{uuid.uuid4().hex[:8]}",
+                blackbox_digest=f"digest-{uuid.uuid4().hex[:8]}",
+                access_policy_summary="test-policy"
             ),
-            operational_metrics=OperationalMetrics(
-                runtime_s=0.1,
-                memory_peak_mb=64.0,
-                cpu_percent=10.0,
-                loop_iterations=0,
-                branch_evaluations=0
-            )
+            operational_metrics=OperationalMetrics()
         )
         
         # Early-Abort Complete Result
         result = QuestorErgebnisPaket(
-            paket_id=str(uuid.uuid4()),
-            dispatch_ref=envelope.dispatch_id,
-            status="abgebrochen",
+            package_id=envelope.package.package_id if hasattr(envelope.package, 'package_id') else "pkg-001",
+            zyklus_id=envelope.zyklus_id,
+            attempt_id=envelope.attempt_id,
+            questor_instance_id=questor_instance_id,
+            sequence_number=self._sequence_counter[questor_instance_id],
+            observed_atlas_version_id="atlas-1",
+            status=ErgebnisStatus.ABGEBROCHEN,
             abbruch_grund=AbbruchGrund.ROUTING_LOOP_TIMEOUT,
             abbruch_klasse=AbbruchKlasse.OPERATIONAL,
             vollstaendig_flag=True,  # KRITISCH: Vollständig trotz Abbruch
+            rohdaten_checksumme="sha256:dummy",
             questor_metadata=metadata,
             ergebnis_zusammenfassung="Abbruch wegen Routing-Loop-Timeout",
             signale_fuer_atlas=[],
@@ -179,26 +184,26 @@ class DummyQuestor:
             questor_instance_id=questor_instance_id,
             sequence_number=self._sequence_counter[questor_instance_id],
             local_audit=LocalAuditRef(
-                audit_id=f"audit-{uuid.uuid4().hex[:8]}",
                 blackbox_id=f"blackbox-{uuid.uuid4().hex[:8]}",
-                trail_hash=f"hash-{uuid.uuid4().hex[:8]}"
+                manifest_checksum=f"sha256-{uuid.uuid4().hex[:8]}",
+                blackbox_digest=f"digest-{uuid.uuid4().hex[:8]}",
+                access_policy_summary="test-policy"
             ),
-            operational_metrics=OperationalMetrics(
-                runtime_s=0.05,
-                memory_peak_mb=32.0,
-                cpu_percent=5.0,
-                loop_iterations=0,
-                branch_evaluations=0
-            )
+            operational_metrics=OperationalMetrics()
         )
         
         result = QuestorErgebnisPaket(
-            paket_id=str(uuid.uuid4()),
-            dispatch_ref=envelope.dispatch_id,
-            status="abgebrochen",
+            package_id=envelope.package.package_id if hasattr(envelope.package, 'package_id') else "pkg-001",
+            zyklus_id=envelope.zyklus_id,
+            attempt_id=envelope.attempt_id,
+            questor_instance_id=questor_instance_id,
+            sequence_number=self._sequence_counter[questor_instance_id],
+            observed_atlas_version_id="atlas-1",
+            status=ErgebnisStatus.ABGEBROCHEN,
             abbruch_grund=abbruch_grund,
             abbruch_klasse=abbruch_klasse,
             vollstaendig_flag=True,
+            rohdaten_checksumme="sha256:dummy",
             questor_metadata=metadata,
             ergebnis_zusammenfassung=f"Abbruch: {str(error)}",
             signale_fuer_atlas=[],
