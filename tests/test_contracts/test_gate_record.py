@@ -85,13 +85,16 @@ def test_wegmarke_creation():
     """Test: Wegmarke kann erstellt werden."""
     w = Wegmarke(
         wegmarke_id="wegmarke-1",
-        name="Test Wegmarke",
-        version="1.0.0",
+        idee_id="idee-1",
+        ziel_koordinate={"x": 0.5, "y": 0.5},
+        atlas_version_ref="atlas_v1",
+        signal_snapshot_version="v1",
+        platzierungs_timestamp="2026-08-18T00:00:00Z",
     )
 
     assert w.wegmarke_id == "wegmarke-1"
-    assert w.name == "Test Wegmarke"
-    assert w.version == "1.0.0"
+    assert w.idee_id == "idee-1"
+    assert w.atlas_version_ref == "atlas_v1"
 
 
 def test_wegmarke_requires_fields():
@@ -99,7 +102,7 @@ def test_wegmarke_requires_fields():
     with pytest.raises(ValidationError):
         Wegmarke(
             wegmarke_id="wegmarke-1",
-            # missing name and version
+            # missing required fields
         )
 
 
