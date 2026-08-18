@@ -27,7 +27,7 @@ class ClusteringService:
 
     def __init__(
         self,
-        dimension_schema: DimensionSchema,
+        dimension_schema: DimensionSchema | None = None,
         missing_data_policy: MissingDataPolicy = MissingDataPolicy.EXCLUDE_DIMENSION,
         eps: float = 0.5,
         min_samples: int = 2,
@@ -132,9 +132,10 @@ class ClusteringService:
 
                 else:
                     value = kristall.koordinaten[dim]
-                    spec = self.dimension_schema.dimensions.get(dim)
-                    if spec:
-                        value = self._normalize_coordinate(value, dim, spec)
+                    if self.dimension_schema and self.dimension_schema.dimensions:
+                        spec = self.dimension_schema.dimensions.get(dim)
+                        if spec:
+                            value = self._normalize_coordinate(value, dim, spec)
                     row.append(value)
 
             if not skip_kristall and row:
@@ -153,23 +154,30 @@ class ClusteringService:
     def cluster_crystals(
         self,
         kristalle: list[WissensKristall],
-        zone_id: str,
-        atlas_version_ref: str,
+        zone_id: str | None = None,
+        atlas_version_ref: str | None = None,
         predecessor_cluster_ids: list[str] | None = None,
-    ) -> list[ClusterV2]:
+    ) -> tuple[list[ClusterV2], list[ZoneV2]]:
         """Führe DBSCAN-Clustering auf Kristallen durch.
 
         Args:
             kristalle: Liste der Kristalle zum Clustern.
-            zone_id: ID der Zone, der die Cluster angehören.
-            atlas_version_ref: Version des Atlas.
+            zone_id: ID der Zone, der die Cluster angehören (optional).
+            atlas_version_ref: Version des Atlas (optional).
             predecessor_cluster_ids: Vorgänger-Cluster für Versionierung.
 
         Returns:
-            Liste von ClusterV2-Objekten.
+            Tuple aus (Liste von ClusterV2, Liste von ZoneV2).
         """
         if not kristalle:
-            return []
+            return [], []
+
+        # Default-Werte setzen falls nicht angegeben
+        if zone_id is None:
+            zone_id = f"zone-{len(kristalle)}"
+        if atlas_version_ref is None:
+            from datetime import datetime, timezone
+            atlas_version_ref = f"v-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
 
         # Ermittle bekannte Dimensionen
         known_dims = self._get_known_dimensions(kristalle)
@@ -247,7 +255,22 @@ class ClusteringService:
             )
             clusters.append(unknown_cluster)
 
-        return clusters
+        # Zone erstellen die alle Cluster enthält
+        from src.contracts.atlas_models import ZoneV2
+        from src.contracts.enums import ZoneHealth
+        
+        zone = ZoneV2(
+            zone_id=zone_id,
+            name=f"Zone {zone_id}",
+            fracture_score=0.0,
+            zone_health=ZoneHealth.STABIL,
+            cluster_ids=[c.cluster_id for c in clusters],
+            predecessor_zone_ids=[],
+            atlas_version_ref=atlas_version_ref,
+            seed_zone=False,
+        )
+
+        return clusters, [zone]
 
     def _compute_centroid(
         self,

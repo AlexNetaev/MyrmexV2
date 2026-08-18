@@ -169,3 +169,56 @@ class ClusterV2(Cluster):
 
     zone_id: str = Field(..., min_length=1)
     atlas_version_ref: str = Field(..., min_length=1)
+
+
+class ZoneV2(Zone):
+    """ZoneV2: Versionierte Zone mit fracture_score und predecessor_ids."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    fracture_score: float = Field(default=0.0, ge=0.0, le=1.0)
+    zone_health: ZoneHealth = ZoneHealth.STABIL
+
+    cluster_ids: list[str] = Field(default_factory=list)
+    predecessor_zone_ids: list[str] = Field(default_factory=list)
+
+    atlas_version_ref: str = Field(..., min_length=1)
+
+    manual_override: ZoneHealth | None = None
+    seed_zone: bool = False
+
+
+class AtlasUpdate(BaseModel):
+    """AtlasUpdate: Ein Update des Atlas durch den Kartographen."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    update_id: str = Field(..., min_length=1)
+    kartograph_mode: str = Field(..., min_length=1)
+
+    new_zones: list[ZoneV2] = Field(default_factory=list)
+    new_clusters: list[ClusterV2] = Field(default_factory=list)
+
+    atlas_version_ref: str = Field(..., min_length=1)
+    predecessor_atlas_id: str | None = None
+
+    timestamp: str = Field(..., min_length=1)
+
+    trigger_reasons: list[str] = Field(default_factory=list)
+
+
+class NeuausrichtenResult(BaseModel):
+    """NeuausrichtenResult: Ergebnis einer NEUAUSRICHTEN-Operation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    triggered: bool = False
+    active_triggers: list[str] = Field(default_factory=list)
+
+    outlier_count: int = Field(default=0, ge=0)
+    r_squared: float | None = None
+    silhouette_score: float | None = None
+    yellow_signal_ratio: float | None = None
+
+    new_coordinates: dict[str, dict[str, float]] = Field(default_factory=dict)
+    projection_method: str | None = None

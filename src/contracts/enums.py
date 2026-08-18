@@ -168,6 +168,44 @@ class RetentionClass(str, Enum):
     DEVELOPMENT_HOLD = "DEVELOPMENT_HOLD"
 
 
+class MissingDataPolicy(str, Enum):
+    EXCLUDE_DIMENSION = "EXCLUDE_DIMENSION"
+    IMPUTE_MEDIAN = "IMPUTE_MEDIAN"
+    SEPARATE_CLUSTER = "SEPARATE_CLUSTER"
+
+
+class DimensionStatus(str, Enum):
+    KNOWN = "KNOWN"
+    UNKNOWN = "UNKNOWN"
+
+
+class ZoneHealth(str, Enum):
+    STABIL = "STABIL"
+    INSTABIL = "INSTABIL"
+    QUARANTAENE = "QUARANTAENE"
+    GESPERRT = "GESPERRT"
+
+
+class NormalizationPolicy(str, Enum):
+    MIN_MAX = "MIN_MAX"
+    Z_SCORE = "Z_SCORE"
+    NONE = "NONE"
+
+
+class KartographMode(str, Enum):
+    STRUKTURIEREN = "STRUKTURIEREN"
+    VERDICHTEN = "VERDICHTEN"
+    NEUAUSRICHTEN = "NEUAUSRICHTEN"
+    FULL_REBUILD = "FULL_REBUILD"
+
+
+class NeuausrichtenTrigger(str, Enum):
+    OUTLIER_2SIGMA = "OUTLIER_2SIGMA"
+    R2_LOW = "R2_LOW"
+    SILHOUETTE_HIGH = "SILHOUETTE_HIGH"
+    YELLOW_SIGNAL_HIGH = "YELLOW_SIGNAL_HIGH"
+
+
 class SignalType(str, Enum):
     """SignalType: Typ eines Atlas-Signals."""
 
