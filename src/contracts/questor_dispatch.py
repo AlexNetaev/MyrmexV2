@@ -1,57 +1,49 @@
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+"""Questor Dispatch Envelope Modelle."""
+from datetime import datetime
+from typing import Any, Optional
+from pydantic import BaseModel, Field
+from enum import Enum
 
-from src.contracts.enums import DispatchMode, GateMode, SecurityMode
-from src.contracts.research_package import ID_PATTERN, ResearchPackage
+
+class SecurityMode(str, Enum):
+    """Sicherheitsmodus für den Dispatch."""
+    DEV_SANDBOX_ONLY = "DEV_SANDBOX_ONLY"
+    PHYSICAL_ALLOWED = "PHYSICAL_ALLOWED"
+    ESTOP_ACTIVE = "ESTOP_ACTIVE"
+
+
+class GateMode(str, Enum):
+    """Gate-Modus."""
+    STRICT = "STRICT"
+    LENIENT = "LENIENT"
+    SANDBOX = "SANDBOX"
 
 
 class LeaseGrant(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    lease_id: str = Field(..., min_length=1)
-    slot_id: str | None = None
-    path_id: str | None = None
-    package_id: str | None = None
-
-    physical_execution_allowed: bool = False
-    sandbox_execution_allowed: bool = False
-    compute_execution_allowed: bool = False
+    """Lease-Grant für eine Slot-ID."""
+    slot_id: str
+    lease_id: str
+    granted_at: str
+    ttl_s: int
+    status: str  # GRANTED, QUEUED, DENIED
 
 
 class QuestorDispatchEnvelope(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    dispatch_id: str = Field(..., min_length=1)
-    zyklus_id: str = Field(
-        ...,
-        pattern=ID_PATTERN,
-        min_length=1,
-        max_length=128,
-    )
-    attempt_id: int = Field(..., ge=0, le=999_999, strict=True)
-
-    package: ResearchPackage
-    gate_record_ref: str = Field(..., min_length=1)
-    gate_mode: GateMode | None = None
-
-    lease_grants: list[LeaseGrant] = Field(default_factory=list)
-    execution_environment_ref: str | None = None
-
-    dispatch_mode: DispatchMode = DispatchMode.NORMAL
-    security_mode: SecurityMode = SecurityMode.NORMAL
-
-    dispatch_timestamp: str = Field(..., min_length=1)
-    idempotency_key: str | None = None
-
-    @model_validator(mode="after")
-    def _canonical_idempotency_key(self) -> "QuestorDispatchEnvelope":
-        expected = f"{self.package.package_id}:{self.zyklus_id}:{self.attempt_id}"
-
-        if len(expected) > 264:
-            raise ValueError("PACKAGE_INVALID")
-
-        if not self.idempotency_key:
-            self.idempotency_key = expected
-        elif self.idempotency_key != expected:
-            raise ValueError("PACKAGE_INVALID")
-
-        return self
+    """
+    Dispatch-Envelope für die Übergabe an Questor.
+    Regel 1: Dispatcher baut IMMER einen QuestorDispatchEnvelope.
+    Regel 2: gate_record_ref ist PFLICHTFELD.
+    """
+    dispatch_id: str = Field(..., description="Eindeutige Dispatch-ID")
+    zyklus_id: int = Field(..., description="Zyklus-ID")
+    attempt_id: int = Field(..., description="Versuchs-ID")
+    package: Any = Field(..., description="ResearchPackage (aus research_package.py)")
+    gate_record_ref: str = Field(..., description="Referenz auf Gate Record (PFLICHT)")
+    gate_mode: GateMode = Field(..., description="Gate-Modus")
+    lease_grants: list[LeaseGrant] = Field(default_factory=list, description="Lease-Grants")
+    security_mode: SecurityMode = Field(..., description="Sicherheitsmodus")
+    idempotency_key: str = Field(..., description="Idempotenz-Schlüssel")
+    execution_environment_ref: Optional[str] = Field(None, description="Referenz auf Execution Environment")
+    created_at: str = Field(default_factory=lambda: datetime.now().isoformat(), description="Erstellungszeitpunkt")
+    
+    model_config = {"arbitrary_types_allowed": True}
