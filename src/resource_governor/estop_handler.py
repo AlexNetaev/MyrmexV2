@@ -1,6 +1,6 @@
 """ESTOP Handler for MYRMEX v2.4.0 Resource Governor."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from threading import Lock
 import uuid
 
@@ -40,7 +40,7 @@ class EstopHandler:
         """
         with self._lock:
             estop_id = f"estop_{uuid.uuid4().hex[:12]}"
-            now = datetime.utcnow().isoformat()
+            now = datetime.now(timezone.utc).isoformat()
             
             # Alle Slots ermitteln und suspendieren
             affected_slots = []
@@ -96,7 +96,7 @@ class EstopHandler:
             
             # Reset durchführen
             estop_event.reset_authorized_by = authorized_by
-            estop_event.reset_at = datetime.utcnow().isoformat()
+            estop_event.reset_at = datetime.now(timezone.utc).isoformat()
             
             # Alle betroffenen Slots zurücksetzen
             for slot_id in estop_event.affected_slots:
