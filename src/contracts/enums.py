@@ -59,6 +59,29 @@ class SlotStatus(str, Enum):
     OFFLINE = "OFFLINE"
 
 
+class LeaseStatusName(str, Enum):
+    """LeaseStatusName: Status einer Lease im Lifecycle."""
+
+    REQUESTED = "REQUESTED"
+    GRANTED = "GRANTED"
+    ACTIVE = "ACTIVE"
+    RELEASED = "RELEASED"
+    DENIED = "DENIED"
+    EXPIRED = "EXPIRED"
+    REVOKED = "REVOKED"
+    ESTOP_SUSPENDED = "ESTOP_SUSPENDED"
+    QUEUED = "QUEUED"
+
+
+class EstopSource(str, Enum):
+    """EstopSource: Quelle eines ESTOP-Ereignisses."""
+
+    HAL = "HAL"
+    SAFETY_MONITOR = "SAFETY_MONITOR"
+    MANUAL = "MANUAL"
+    HARDWARE_INTERLOCK = "HARDWARE_INTERLOCK"
+
+
 class ZoneStatus(str, Enum):
     FREE = "FREE"
     LOCKED = "LOCKED"
