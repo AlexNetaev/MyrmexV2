@@ -37,7 +37,7 @@ class Kartograph:
     """
 
     def __init__(self):
-        self._clustering_service = ClusteringService()
+        self._clustering_service = ClusteringService(eps=2.0, min_samples=2)
         self._atlas_versions: dict[str, AtlasUpdate] = {}
         self._current_version_ref: str | None = None
 
@@ -59,7 +59,7 @@ class Kartograph:
         # Seed-Zone prüfen (>= 3 Kristalle mit UNKNOWN-Dimensionen)
         unknown_crystals = [
             c for c in crystals
-            if any(str(s) == "UNKNOWN" for s in c.dimension_status.values())
+            if any(s == DimensionStatus.UNKNOWN for s in c.dimension_status.values())
         ]
         
         seed_zone_created = False
@@ -238,9 +238,10 @@ class Kartograph:
         # Kompletten Neubau durchführen
         clusters, zones = self._clustering_service.cluster_crystals(crystals)
 
-        # fracture_score für alle Zonen berechnen
+        # fracture_score einmal für alle Kristalle berechnen
+        global_fracture_score = calculate_fracture_score(crystals)
         for zone in zones:
-            zone.fracture_score = calculate_fracture_score(crystals, zone)
+            zone.fracture_score = global_fracture_score
 
         # Neue Version erstellen
         version_ref = self._generate_version_ref()

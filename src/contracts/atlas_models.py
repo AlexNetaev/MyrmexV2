@@ -141,22 +141,6 @@ class DimensionSchema(BaseModel):
     dimensions: dict[str, DimensionSpec] = Field(default_factory=dict)
 
 
-class ZoneV2(Zone):
-    """ZoneV2: Versionierte Zone mit fracture_score und predecessor_ids."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    fracture_score: float = Field(default=0.0, ge=0.0, le=1.0)
-    zone_health: ZoneHealth = ZoneHealth.STABIL
-
-    cluster_ids: list[str] = Field(default_factory=list)
-    predecessor_zone_ids: list[str] = Field(default_factory=list)
-
-    atlas_version_ref: str = Field(..., min_length=1)
-
-    manual_override: ZoneHealth | None = None
-
-
 class ClusterV2(Cluster):
     """ClusterV2: Versionierter Cluster mit predecessor_ids."""
 
