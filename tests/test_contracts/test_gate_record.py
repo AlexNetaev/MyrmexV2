@@ -9,10 +9,12 @@ from src.contracts.pipeline_models import GateRecord, RohIdee, Wegmarke
 
 def _gate_record(**overrides):
     data = {
+        "gate_record_id": "gate-record-1",
         "gate_id": "gate-1",
         "package_id": "pkg-001",
         "zyklus_id": "zyklus-014",
         "gate_mode": GateMode.NORMAL,
+        "timestamp": "2026-08-18T00:00:00Z",
     }
     data.update(overrides)
     return data
@@ -69,9 +71,11 @@ def test_gate_record_requires_zyklus_id():
 def test_gate_record_defaults_to_normal_mode():
     """Test: gate_mode default ist NORMAL."""
     payload = {
+        "gate_record_id": "gate-record-1",
         "gate_id": "gate-1",
         "package_id": "pkg-001",
         "zyklus_id": "zyklus-014",
+        "timestamp": "2026-08-18T00:00:00Z",
     }
     gr = GateRecord(**payload)
     assert gr.gate_mode == GateMode.NORMAL
