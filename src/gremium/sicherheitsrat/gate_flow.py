@@ -4,7 +4,7 @@ import hashlib
 import uuid
 from datetime import datetime, timezone
 
-from src.contracts.pipeline_models import GateRecord, DimensionOnboardingRequest
+from src.contracts.pipeline_models import GateRecord, DimensionOnboardingRequest, SeherResultModel
 from src.contracts.enums import GateMode, GateDecision, RichterResult, SeherResult
 
 from .richter import Richter, RichterResultData
@@ -52,7 +52,7 @@ class GateFlow:
                 package,
                 gate_mode,
                 richter_result=RichterResult.RICHTER_REJECT,
-                seher_result=SeherResult.SEHER_NOT_CALLED,
+                seher_result_model=SeherResultModel(decision=SeherResult.SEHER_NOT_CALLED),
                 gate_decision=GateDecision.ABGELEHNT,
                 onboarding_requests=[]
             )
@@ -63,18 +63,26 @@ class GateFlow:
                 package,
                 gate_mode,
                 richter_result=RichterResult.REGELLUECKE,
-                seher_result=SeherResult.SEHER_NOT_CALLED,
+                seher_result_model=SeherResultModel(decision=SeherResult.SEHER_NOT_CALLED),
                 gate_decision=GateDecision.ABGELEHNT,
                 onboarding_requests=richter_result.onboarding_requests
             )
 
         # 3. Seher prüfen (bei RICHTER_PASS)
-        seher_result = self.seher.seher_check(package, getattr(package, "kontext", None))
+        seher_result_raw = self.seher.seher_check(package, getattr(package, "kontext", None))
+        
+        # Handle both SeherResultModel (new) and SeherResult (legacy/mock) return types
+        if isinstance(seher_result_raw, SeherResult):
+            # Legacy/Mock: Direktes Enum zurückgegeben
+            seher_result_model = SeherResultModel(decision=seher_result_raw)
+        else:
+            # New: SeherResultModel zurückgegeben
+            seher_result_model = seher_result_raw
 
         # 4. Gate-Entscheidung basierend auf Seher-Ergebnis
-        if seher_result == SeherResult.SEHER_PASS:
+        if seher_result_model.decision == SeherResult.SEHER_PASS:
             gate_decision = GateDecision.FREIGEGEBEN
-        elif seher_result == SeherResult.SEHER_VETO:
+        elif seher_result_model.decision == SeherResult.SEHER_VETO:
             gate_decision = GateDecision.DISPUTED  # Phase 6b: Kanzler entscheidet
         else:
             gate_decision = GateDecision.ABGELEHNT
@@ -101,7 +109,7 @@ class GateFlow:
             package,
             gate_mode,
             richter_result=richter_result.decision,
-            seher_result=seher_result,
+            seher_result_model=seher_result_model,
             gate_decision=gate_decision,
             onboarding_requests=richter_result.onboarding_requests,
             physical_execution_allowed=physical_execution_allowed
@@ -112,7 +120,7 @@ class GateFlow:
         package,
         gate_mode: GateMode,
         richter_result: RichterResult,
-        seher_result: SeherResult,
+        seher_result_model: SeherResultModel,
         gate_decision: GateDecision,
         onboarding_requests: list[DimensionOnboardingRequest],
         physical_execution_allowed: bool = True
@@ -120,6 +128,9 @@ class GateFlow:
         """Erzeugt ein signiertes GateRecord."""
         gate_record_id = f"gate-{uuid.uuid4()}"
         timestamp = datetime.now(timezone.utc).isoformat()
+
+        # Extrahiere SeherResult Enum aus dem Modell für das GateRecord
+        seher_result_enum = seher_result_model.decision
 
         # Erst GateRecord ohne Signatur erstellen (signature ist optional für die Erstellung)
         gate_record = GateRecord(
@@ -130,7 +141,7 @@ class GateFlow:
             gate_mode=gate_mode,
             gate_decision=gate_decision,
             richter_result=richter_result,
-            seher_result=seher_result,
+            seher_result=seher_result_enum,
             safety_checks_passed=(richter_result == RichterResult.RICHTER_PASS),
             validation_checks_passed=(gate_decision == GateDecision.FREIGEGEBEN),
             timestamp=timestamp,
