@@ -39,16 +39,20 @@ def _create_crystal(
 
 def test_detect_outliers_identifies_2sigma():
     """Outlier-Detection findet >2σ Ausreißer."""
+    # Benötige mindestens 3 normale Punkte + 1 Ausreißer für korrekte Erkennung
     crystals = [
         _create_crystal("k-001", koordinaten={"x": 1.0, "y": 1.0}),
         _create_crystal("k-002", koordinaten={"x": 1.1, "y": 1.1}),
         _create_crystal("k-003", koordinaten={"x": 1.2, "y": 1.2}),
-        _create_crystal("k-004", koordinaten={"x": 100.0, "y": 100.0}),  # Ausreißer
+        _create_crystal("k-004", koordinaten={"x": 1.0, "y": 1.0}),
+        _create_crystal("k-005", koordinaten={"x": 1.1, "y": 1.1}),
+        _create_crystal("k-006", koordinaten={"x": 1.2, "y": 1.2}),
+        _create_crystal("k-007", koordinaten={"x": 100.0, "y": 100.0}),  # Ausreißer
     ]
 
     outliers = detect_outliers(crystals)
 
-    assert "k-004" in outliers
+    assert "k-007" in outliers
     assert len(outliers) == 1
 
 

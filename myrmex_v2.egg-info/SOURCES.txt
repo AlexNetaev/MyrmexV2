@@ -29,6 +29,11 @@ myrmex_v2.egg-info/dependency_links.txt
 myrmex_v2.egg-info/requires.txt
 myrmex_v2.egg-info/top_level.txt
 src/__init__.py
+src/atlas/__init__.py
+src/atlas/atlas_builder.py
+src/atlas/atlas_store.py
+src/atlas/clustering.py
+src/atlas/signal_registry.py
 src/contracts/__init__.py
 src/contracts/atlas_models.py
 src/contracts/enums.py
@@ -40,6 +45,8 @@ src/contracts/questor_metadata.py
 src/contracts/questor_result.py
 src/contracts/research_package.py
 src/gremium/__init__.py
+src/gremium/archivar.py
+src/gremium/kartograph.py
 src/hal/__init__.py
 src/hal/dummy_hal.py
 src/hal/hal_interface.py

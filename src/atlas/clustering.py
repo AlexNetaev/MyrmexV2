@@ -175,10 +175,10 @@ class ClusteringService:
 
         # Default-Werte setzen falls nicht angegeben
         if zone_id is None:
-            zone_id = f"zone-{len(kristalle)}"
+            zone_id = f"zone-{uuid.uuid4().hex[:8]}"
         if atlas_version_ref is None:
             from datetime import datetime, timezone
-            atlas_version_ref = f"v-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+            atlas_version_ref = f"v-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}"
 
         # Ermittle bekannte Dimensionen
         known_dims = self._get_known_dimensions(kristalle)
