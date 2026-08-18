@@ -6,6 +6,7 @@ from typing import Optional, Dict, List, Callable, Any
 
 from src.contracts.pipeline_models import SeherVeto, Appeal, AppealResolution
 from src.contracts.enums import AppealStatus, AppealDecision, RichterResult
+from .richter import RichterResultData
 
 
 class AppealManager:
@@ -28,8 +29,8 @@ class AppealManager:
     def create_appeal(
         self,
         package_id: str,
-        seher_veto: SeherVeto,
-        richter_result: RichterResult,
+        seher_veto: SeherVeto | None,
+        richter_result: RichterResultData,
         gate_mode: Optional[str] = None
     ) -> Appeal:
         """
@@ -46,11 +47,14 @@ class AppealManager:
         """
         appeal_id = f"appeal-{uuid.uuid4()}"
         
+        # Extrahiere die Enum-Entscheidung aus dem RichterResultData-Objekt
+        richter_decision = richter_result.decision if hasattr(richter_result, 'decision') else richter_result
+        
         appeal = Appeal(
             appeal_id=appeal_id,
             package_id=package_id,
             seher_veto=seher_veto,
-            richter_result=richter_result,
+            richter_result=richter_decision,
             status=AppealStatus.DISPUTED,
             gate_mode=gate_mode,
             created_at=datetime.now(timezone.utc).isoformat()

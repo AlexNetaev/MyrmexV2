@@ -6,13 +6,26 @@ from src.gremium.sicherheitsrat.gate_flow import GateFlow
 from src.gremium.sicherheitsrat.seher import Seher
 from src.gremium.sicherheitsrat.circuit_breaker import CircuitBreaker
 from src.gremium.sicherheitsrat.appeal import AppealManager
-from src.contracts.research_package import ResearchPackage
+from src.gremium.sicherheitsrat.policy_review import PolicyReviewManager
+from src.contracts.research_package import ResearchPackage, PackageKontext, RoutingGraph
 from src.contracts.pipeline_models import GateMode
 from src.contracts.enums import GateDecision, RichterResult
 
 
 class TestGateFlowIntegration:
     """Tests für die Gate-Flow-Integration."""
+
+    def _create_test_package(self, package_id: str = "pkg-test-1") -> ResearchPackage:
+        """Hilfsmethode zum Erstellen eines validen Test-Pakets."""
+        return ResearchPackage(
+            package_id=package_id,
+            source_wegmarke="test_source",
+            atlas_version_ref="atlas-v1.0.0",
+            ziel="test_target",
+            routing_graph=RoutingGraph(max_loop_iterations=10, branch_condition_timeout=30.0),
+            kontext=PackageKontext(kontext_id="ctx-1", domain="test"),
+            limits={"temperature": 25.0}
+        )
 
     def test_gate_flow_with_seher_normal(self):
         """Gate-Flow mit Seher in NORMAL-Modus."""
@@ -26,13 +39,7 @@ class TestGateFlowIntegration:
             appeal_manager=appeal_manager
         )
         
-        package = ResearchPackage(
-            package_id="pkg-normal-1",
-            capability="test_capability",
-            parameters={"value": 42},
-            limits={"temperature": {"min": 0, "max": 100}},
-            kontext="Normaler Testkontext"
-        )
+        package = self._create_test_package("pkg-normal-1")
         
         # Circuit-Breaker ist in NORMAL
         assert circuit_breaker.state == "NORMAL"
@@ -58,13 +65,7 @@ class TestGateFlowIntegration:
         # Circuit-Breaker in SHADOW_MODE setzen
         circuit_breaker.state = "SHADOW_MODE"
         
-        package = ResearchPackage(
-            package_id="pkg-shadow-1",
-            capability="test_capability",
-            parameters={"value": 42},
-            limits={"temperature": {"min": 0, "max": 100}},
-            kontext="Testkontext für Shadow-Mode"
-        )
+        package = self._create_test_package("pkg-shadow-1")
         
         gate_record = gate_flow.run_gate(package, GateMode.NORMAL)
         
@@ -87,19 +88,13 @@ class TestGateFlowIntegration:
         # Circuit-Breaker in TEMP_SUSPENDED setzen
         circuit_breaker.state = "TEMP_SUSPENDED"
         
-        package = ResearchPackage(
-            package_id="pkg-suspended-1",
-            capability="test_capability",
-            parameters={"value": 42},
-            limits={"temperature": {"min": 0, "max": 100}},
-            kontext="Testkontext für Suspended-Mode"
-        )
+        package = self._create_test_package("pkg-suspended-1")
         
         gate_record = gate_flow.run_gate(package, GateMode.NORMAL)
         
         # Seher wurde übersprungen
         assert gate_record is not None
-        assert gate_record.seher_result == "SEHER_NOT_CALLED"
+        assert gate_record.seher_result.value == "SEHER_NOT_CALLED"
 
     def test_gate_flow_disputed_creates_appeal(self):
         """DISPUTED erzeugt Appeal."""
@@ -113,16 +108,7 @@ class TestGateFlowIntegration:
             appeal_manager=appeal_manager
         )
         
-        # Mock: Seher gibt Veto zurück (müsste im Test konfiguriert werden)
-        # Hier simulieren wir das Ergebnis
-        
-        package = ResearchPackage(
-            package_id="pkg-disputed-1",
-            capability="test_capability",
-            parameters={"value": 42},
-            limits={"temperature": {"min": 0, "max": 100}},
-            kontext="Testkontext für Disputed"
-        )
+        package = self._create_test_package("pkg-disputed-1")
         
         # Gate-Flow sollte bei Richter PASS + Seher VETO → DISPUTED erzeugen
         # und Appeal erstellen
@@ -145,13 +131,7 @@ class TestGateFlowIntegration:
             appeal_manager=appeal_manager
         )
         
-        package = ResearchPackage(
-            package_id="pkg-appeal-1",
-            capability="test_capability",
-            parameters={"value": 42},
-            limits={"temperature": {"min": 0, "max": 100}},
-            kontext="Testkontext für Appeal"
-        )
+        package = self._create_test_package("pkg-appeal-1")
         
         # Simuliere DISPUTED-Szenario
         gate_record = gate_flow.run_gate(package, GateMode.NORMAL)
@@ -183,13 +163,7 @@ class TestGateFlowIntegration:
             appeal_manager=appeal_manager
         )
         
-        package = ResearchPackage(
-            package_id="pkg-veto-1",
-            capability="test_capability",
-            parameters={"value": 42},
-            limits={"temperature": {"min": 0, "max": 100}},
-            kontext="Testkontext für Veto"
-        )
+        package = self._create_test_package("pkg-veto-1")
         
         gate_record = gate_flow.run_gate(package, GateMode.NORMAL)
         
@@ -209,8 +183,6 @@ class TestGateFlowIntegration:
 
     def test_gate_flow_triggers_policy_review(self):
         """Nach N Zyklen wird Policy-Veto-Review ausgelöst."""
-        from src.gremium.sicherheitsrat.policy_review import PolicyReviewManager
-        
         seher = Seher()
         circuit_breaker = CircuitBreaker()
         appeal_manager = AppealManager()
@@ -223,13 +195,7 @@ class TestGateFlowIntegration:
             policy_review=policy_review
         )
         
-        package = ResearchPackage(
-            package_id="pkg-review-1",
-            capability="test_capability",
-            parameters={"value": 42},
-            limits={"temperature": {"min": 0, "max": 100}},
-            kontext="Testkontext für Review"
-        )
+        package = self._create_test_package("pkg-review-1")
         
         # Mehrere Zyklen durchlaufen
         for i in range(3):
@@ -251,13 +217,7 @@ class TestGateFlowIntegration:
             appeal_manager=appeal_manager
         )
         
-        package = ResearchPackage(
-            package_id="pkg-recovery-1",
-            capability="test_capability",
-            parameters={"value": 42},
-            limits={"temperature": {"min": 0, "max": 100}},
-            kontext="Testkontext für Recovery"
-        )
+        package = self._create_test_package("pkg-recovery-1")
         
         # Gate-Flow sollte mit Recovery-State umgehen können
         gate_record = gate_flow.run_gate(package, GateMode.NORMAL)

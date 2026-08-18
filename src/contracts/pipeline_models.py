@@ -120,6 +120,9 @@ class SeherResultModel(BaseModel):
     evidence_refs: list[str] = Field(default_factory=list)
     policy_ref: str | None = None
     fallback_used: bool = False
+    
+    # Hilfsfeld für den Zugriff auf das vollständige Veto-Objekt
+    veto: SeherVeto | None = None
 
 
 class CircuitBreakerMetrics(BaseModel):
