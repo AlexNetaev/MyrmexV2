@@ -4,21 +4,38 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.Python
-venv/
+*.egg-info/
+
+# Dependencies
 .venv/
+venv/
+env/
 .env
 .env.local
 .env.*
 
-# Testing
+# Build artifacts
+build/
+dist/
+*.so
+*.dylib
+*.dll
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Coverage
 .coverage
 coverage/
 htmlcov/
-.pytest_cache/
 
-# Build and distribution
-build/
-dist/
-*.egg-info/
+# Temporary files
+*.tmp
+*.temp
 ```

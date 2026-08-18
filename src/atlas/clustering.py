@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from datetime import datetime, timezone
+import uuid
 from typing import Any
 
 import numpy as np
@@ -232,7 +233,7 @@ class ClusteringService:
                     centroid = self._compute_centroid(kristalle_in_cluster, known_dims)
 
                     cluster = ClusterV2(
-                        cluster_id=f"cluster-{zone_id}-{label}",
+                        cluster_id=f"cluster-{str(uuid.uuid4())[:8]}",
                         name=f"Cluster {label}",
                         zone_id=zone_id,
                         kristall_ids=kristall_ids,
@@ -245,7 +246,7 @@ class ClusteringService:
         # Separate Cluster für UNKNOWN-Kristalle
         if unknown_kristalle and self.missing_data_policy == MissingDataPolicy.SEPARATE_CLUSTER:
             unknown_cluster = ClusterV2(
-                cluster_id=f"cluster-{zone_id}-unknown",
+                cluster_id=f"cluster-unknown-{str(uuid.uuid4())[:8]}",
                 name="Unknown Dimension Cluster",
                 zone_id=zone_id,
                 kristall_ids=[k.kristall_id for k in unknown_kristalle],
