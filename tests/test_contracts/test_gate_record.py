@@ -109,6 +109,7 @@ def test_roh_idee_creation():
         idee_id="idee-1",
         titel="Test Idee",
         beschreibung="Eine Test-Idee",
+        atlas_version_ref="v1.0.0",
     )
 
     assert idee.idee_id == "idee-1"
@@ -124,6 +125,7 @@ def test_roh_idee_prioritaet_bounds():
             titel="Test",
             beschreibung="Test",
             prioritaet=-1,
+            atlas_version_ref="v1.0.0",
         )
 
     with pytest.raises(ValidationError):
@@ -132,6 +134,7 @@ def test_roh_idee_prioritaet_bounds():
             titel="Test",
             beschreibung="Test",
             prioritaet=11,
+            atlas_version_ref="v1.0.0",
         )
 
     # Valid values
@@ -140,6 +143,7 @@ def test_roh_idee_prioritaet_bounds():
         titel="Test",
         beschreibung="Test",
         prioritaet=0,
+        atlas_version_ref="v1.0.0",
     )
     assert idee_low.prioritaet == 0
 
@@ -148,5 +152,6 @@ def test_roh_idee_prioritaet_bounds():
         titel="Test",
         beschreibung="Test",
         prioritaet=10,
+        atlas_version_ref="v1.0.0",
     )
     assert idee_high.prioritaet == 10
