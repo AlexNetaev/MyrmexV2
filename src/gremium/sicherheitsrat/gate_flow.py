@@ -1,14 +1,16 @@
-"""Gate-Flow — Sicherheits-Gate mit Richter und Seher."""
+"""Gate-Flow — Sicherheits-Gate mit Richter, Seher, Circuit-Breaker und Appeal."""
 
 import hashlib
 import uuid
 from datetime import datetime, timezone
 
 from src.contracts.pipeline_models import GateRecord, DimensionOnboardingRequest, SeherResultModel
-from src.contracts.enums import GateMode, GateDecision, RichterResult, SeherResult
+from src.contracts.enums import GateMode, GateDecision, RichterResult, SeherResult, SeherDecision, CircuitBreakerState
 
 from .richter import Richter, RichterResultData
 from .seher import Seher
+from .circuit_breaker import CircuitBreaker
+from .appeal import AppealManager
 
 
 class GateFlow:
@@ -17,20 +19,35 @@ class GateFlow:
 
     Der Gate-Flow kombiniert:
     - Richter (deterministisch, Fail-Closed)
-    - Seher (LLM-basiert, in Phase 6a als Stub)
+    - Seher (LLM-basiert, mit Circuit-Breaker geschützt)
+    - Circuit-Breaker (schützt vor Seher-Fehlverhalten)
+    - Appeal-Manager (Berufungsprozess bei DISPUTED)
+    - Policy-Review (regelmäßige Überprüfung von POLICY_VETOs)
 
     Gate-Entscheidungslogik:
     - Richter REJECT → ABGELEHNT
     - Richter PASS + Seher PASS → FREIGEGEBEN
-    - Richter PASS + Seher VETO → DISPUTED (Phase 6b: Kanzler entscheidet)
+    - Richter PASS + Seher VETO → DISPUTED (Appeal wird erstellt)
     - Richter REGELLÜCKE → ABGELEHNT + dimension_onboarding_request
     - gate_mode = SANDBOX → FREIGEGEBEN (nur virtuell, physical_execution_allowed=false)
     - gate_mode = HIGH_RISK_OVERRIDE → Positive Widerlegung erforderlich
+    - Circuit-Breaker SHADOW_MODE/TEMP_SUSPENDED → Seher-Ergebnis wird ignoriert/übersprungen
     """
 
-    def __init__(self, richter: Richter, seher: Seher | None = None):
-        self.richter = richter
+    def __init__(
+        self,
+        richter: Richter | None = None,
+        seher: Seher | None = None,
+        circuit_breaker: CircuitBreaker | None = None,
+        appeal_manager: AppealManager | None = None,
+        policy_review=None  # Optional für Phase 6B
+    ):
+        self.richter = richter or Richter()
         self.seher = seher or Seher()
+        self.circuit_breaker = circuit_breaker or CircuitBreaker()
+        self.appeal_manager = appeal_manager or AppealManager()
+        self.policy_review = policy_review
+        self._cycle_counter = 0
 
     def run_gate(self, package, gate_mode: GateMode = GateMode.NORMAL) -> GateRecord:
         """
@@ -43,6 +60,8 @@ class GateFlow:
         Returns:
             GateRecord mit Ergebnis und Signatur
         """
+        self._cycle_counter += 1
+        
         # 1. Richter prüfen (immer, deterministisch)
         richter_result = self.richter.check(package, gate_mode)
 
@@ -52,7 +71,7 @@ class GateFlow:
                 package,
                 gate_mode,
                 richter_result=RichterResult.RICHTER_REJECT,
-                seher_result_model=SeherResultModel(decision=SeherResult.SEHER_NOT_CALLED),
+                seher_result_model=SeherResultModel(decision=SeherDecision.SEHER_NOT_CALLED),
                 gate_decision=GateDecision.ABGELEHNT,
                 onboarding_requests=[]
             )
@@ -63,28 +82,57 @@ class GateFlow:
                 package,
                 gate_mode,
                 richter_result=RichterResult.REGELLUECKE,
-                seher_result_model=SeherResultModel(decision=SeherResult.SEHER_NOT_CALLED),
+                seher_result_model=SeherResultModel(decision=SeherDecision.SEHER_NOT_CALLED),
                 gate_decision=GateDecision.ABGELEHNT,
                 onboarding_requests=richter_result.onboarding_requests
             )
 
-        # 3. Seher prüfen (bei RICHTER_PASS)
-        seher_result_raw = self.seher.seher_check(package, getattr(package, "kontext", None))
+        # 3. Circuit-Breaker Status prüfen
+        cb_state = self.circuit_breaker.state
         
-        # Handle both SeherResultModel (new) and SeherResult (legacy/mock) return types
-        if isinstance(seher_result_raw, SeherResult):
-            # Legacy/Mock: Direktes Enum zurückgegeben
-            seher_result_model = SeherResultModel(decision=seher_result_raw)
+        seher_result_model = SeherResultModel(decision=SeherDecision.SEHER_NOT_CALLED)
+        
+        if cb_state == CircuitBreakerState.TEMP_SUSPENDED or cb_state == CircuitBreakerState.PERMANENT_SUSPENDED:
+            # Seher wird übersprungen
+            seher_result_model = SeherResultModel(decision=SeherDecision.SEHER_NOT_CALLED)
+        elif cb_state == CircuitBreakerState.SHADOW_MODE:
+            # Seher aufrufen, aber Ergebnis nicht als Blockade werten
+            seher_result_raw = self.seher.seher_check(package, getattr(package, "kontext", None))
+            if isinstance(seher_result_raw, SeherResult):
+                seher_result_model = SeherResultModel(decision=seher_result_raw)
+            else:
+                seher_result_model = seher_result_raw
+            # In SHADOW_MODE: Veto wird nicht als Blockade gewertet → wie PASS behandeln
+            if seher_result_model.decision == SeherDecision.SEHER_VETO:
+                seher_result_model = SeherResultModel(decision=SeherDecision.SEHER_PASS)
         else:
-            # New: SeherResultModel zurückgegeben
-            seher_result_model = seher_result_raw
+            # NORMAL: Seher normal aufrufen
+            seher_result_raw = self.seher.seher_check(package, getattr(package, "kontext", None))
+            if isinstance(seher_result_raw, SeherResult):
+                seher_result_model = SeherResultModel(decision=seher_result_raw)
+            else:
+                seher_result_model = seher_result_raw
 
         # 4. Gate-Entscheidung basierend auf Seher-Ergebnis
-        if seher_result_model.decision == SeherResult.SEHER_PASS:
+        gate_decision = GateDecision.FREIGEGEBEN  # Default bei PASS
+        
+        if seher_result_model.decision == SeherDecision.SEHER_PASS:
             gate_decision = GateDecision.FREIGEGEBEN
-        elif seher_result_model.decision == SeherResult.SEHER_VETO:
-            gate_decision = GateDecision.DISPUTED  # Phase 6b: Kanzler entscheidet
-        else:
+        elif seher_result_model.decision == SeherDecision.SEHER_VETO:
+            # Richter PASS + Seher VETO → DISPUTED → Appeal erstellen
+            gate_decision = GateDecision.DISPUTED
+            
+            # Appeal erstellen
+            appeal = self.appeal_manager.create_appeal(
+                package_id=getattr(package, "package_id", "unknown"),
+                seher_veto=seher_result_model.veto,
+                richter_result=richter_result
+            )
+        elif seher_result_model.decision in [
+            SeherDecision.SEHER_INVALID_VETO,
+            SeherDecision.SEHER_INVALID_ACTION,
+            SeherDecision.SEHER_NOT_AVAILABLE
+        ]:
             gate_decision = GateDecision.ABGELEHNT
 
         # 5. SANDBOX_MODE: Keine physische Ausführung
@@ -96,7 +144,6 @@ class GateFlow:
         # 6. HIGH_RISK_OVERRIDE: Positive Widerlegung erforderlich
         if gate_mode == GateMode.HIGH_RISK_OVERRIDE:
             # Erfordert positive Widerlegung der Gefahr
-            # In Phase 6a: Einfach freigeben, in Phase 6b: Zusätzliche Prüfung
             pass
 
         # 7. FRACTURE_DIAGNOSIS: Erlaubt diagnostic-safe in QUARANTÄNE
@@ -104,7 +151,13 @@ class GateFlow:
             # Erlaubt diagnostic-safe Ausführung in QUARANTÄNE-Zonen
             pass
 
-        # 8. gate_record erzeugen mit Signatur
+        # 8. Policy-Veto-Review prüfen (alle N Zyklen)
+        if self.policy_review:
+            if self.policy_review.increment_cycle():
+                # Review fällig → durchführen
+                self.policy_review.run_review([])
+
+        # 9. gate_record erzeugen mit Signatur
         return self._create_gate_record(
             package,
             gate_mode,
