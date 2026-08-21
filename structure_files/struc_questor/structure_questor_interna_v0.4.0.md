@@ -13,7 +13,9 @@
 | | `structure_standalone_questor_v0.2.3.md` (unterstützend) |
 | Sprache | Deutsch |
 | Modus | Dry-Run / Spezifikation |
-| Ersetzt | `structure_questor_interna_v0.3.0.md` |
+| Ersetzt | `structure_standalone_questcompass_v0.1.0.md` (bereits in v0.3.0 integriert) |
+|         | `structure_standalone_hal_bridge_exp_ledger_v0.1.0.md` (bereits in v0.3.0 integriert) |
+| Fundament | `structure_questor_interna_v0.3.0.md` (Teile A–J, unverändert) |
 
 ---
 
@@ -38,10 +40,19 @@
 
 Bei Widersprüchen gilt die kanonische Hauptreferenz.
 
-Diese Datei ersetzt:
-- `structure_questor_interna_v0.3.0.md` (vollständig)
-- `structure_standalone_questcompass_v0.1.0.md` (bereits in v0.3.0 integriert)
-- `structure_standalone_hal_bridge_exp_ledger_v0.1.0.md` (bereits in v0.3.0 integriert)
+Diese Datei ist die **Gesamtspezifikation** (Einstiegspunkt) der Questor-Interna.
+
+Sie **ersetzt** die folgenden Einzel-Dokumente:
+- `structure_standalone_questcompass_v0.1.0.md`
+- `structure_standalone_hal_bridge_exp_ledger_v0.1.0.md`
+
+Sie **baut auf** dem folgenden Fundament-Dokument auf:
+- `structure_questor_interna_v0.3.0.md` → Teile A–J (unverändert, autoritativ)
+
+Sie **verweist** auf die folgenden Detaildokumente:
+- `questor_sanitization_v0.1.0.md` → Teil K
+- `questor_capability_registry_v0.1.0.md` → Teil L
+- ... (alle 9 Detaildokumente)
 
 ---
 
@@ -128,7 +139,7 @@ Diese Datei ist der **Einstiegspunkt** für die Questor-Interna. Sie definiert:
 
 ## TEIL A: QUESTOR-ZUSTANDSMASCHINE
 
-**Status:** Aus v0.3.0 übernommen, unverändert.
+**Status:** Definiert in v0.3.0, unverändert.
 **Abschnitte:** §3–§8
 
 Zusammenfassung:
@@ -143,7 +154,7 @@ Zusammenfassung:
 
 ## TEIL B: QUESTCOMPASS-ALGORITHMUS
 
-**Status:** Aus v0.3.0 übernommen, unverändert.
+**Status:** Definiert in v0.3.0, unverändert.
 **Abschnitte:** §9–§18
 
 Zusammenfassung:
@@ -163,7 +174,7 @@ Zusammenfassung:
 
 ## TEIL C: LOOP-ARCHITEKTUR
 
-**Status:** Aus v0.3.0 übernommen, unverändert.
+**Status:** Definiert in v0.3.0, unverändert.
 **Abschnitte:** §19–§24
 
 Zusammenfassung:
@@ -180,7 +191,7 @@ Zusammenfassung:
 
 ## TEIL D: TEMPLATE-LEBENSZYKLUS
 
-**Status:** Aus v0.3.0 übernommen, unverändert.
+**Status:** Definiert in v0.3.0, unverändert.
 **Abschnitte:** §25–§29
 
 Zusammenfassung:
@@ -196,7 +207,7 @@ Zusammenfassung:
 
 ## TEIL E: HAL-BRIDGE
 
-**Status:** Aus v0.3.0 übernommen, unverändert.
+**Status:** Definiert in v0.3.0, unverändert.
 **Abschnitte:** §30–§38
 
 Zusammenfassung:
@@ -214,7 +225,7 @@ Zusammenfassung:
 
 ## TEIL F: EXPEDITIONLEDGER + WAL
 
-**Status:** Aus v0.3.0 übernommen, unverändert.
+**Status:** Definiert in v0.3.0, unverändert.
 **Abschnitte:** §39–§48
 
 Zusammenfassung:
@@ -232,7 +243,7 @@ Zusammenfassung:
 
 ## TEIL G: RESULT-BUILDER
 
-**Status:** Aus v0.3.0 übernommen, unverändert.
+**Status:** Definiert in v0.3.0, unverändert.
 **Abschnitte:** §49–§57
 
 Zusammenfassung:
@@ -253,7 +264,7 @@ Zusammenfassung:
 
 ## TEIL H: QUESTOR-FACADE (QUEUE-ARCHITEKTUR)
 
-**Status:** Aus v0.3.0 übernommen, unverändert.
+**Status:** Definiert in v0.3.0, unverändert.
 **Abschnitte:** §58–§64
 
 Zusammenfassung:
