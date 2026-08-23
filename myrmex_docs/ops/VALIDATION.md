@@ -1,15 +1,13 @@
 # 🧪 VALIDATION — TESTSTRATEGIE UND AKZEPTANZKRITERIEN
 
 | Feld | Wert |
-| :--- | :--- |
-| **Dateiname** | `ops/VALIDATION.md` |
-| **Version** | 1.0.0 (New Architecture) |
-| **Status** | **BINDEND** — Teststrategie und Akzeptanzkriterien |
-| **System** | MYRMEX v2.4.0 + Questor v0.2.3 + HAL v0.2.0 |
-| **Schicht** | Layer 2 (ops/) — referenziert foundation/ und specs/ |
-| **Datum** | 21. August 2026 |
-
----
+| --- | --- |
+| Dateiname | `ops/VALIDATION.md` |
+| Version | `1.1.0-atlas-hyb.1` |
+| Status | `ÄNDERUNGSANTRAG ATLAS-HYB-1.0.0 — nach Freigabe BINDEND` |
+| System | `MYRMEX v2.4.0 + Questor v0.2.3 + HAL v0.2.0` |
+| Schicht | `Layer 2 (ops/) — referenziert foundation/ und specs/` |
+| Datum | `21. August 2026` |
 
 ## 0. Geltung und Änderungsregeln
 
@@ -20,6 +18,19 @@ Es definiert keine neuen Verträge und keine neuen Sicherheitsregeln.
 
 **Konfliktregel:** Bei Widersprüchen gilt `CHARTER.md` > `CONTRACTS.md` > `specs/*` > dieses Dokument.
 
+## §0.1 Änderungsantrag ATLAS-HYB-1.0.0 — Atlas-Hybrid-Test-Suite
+
+Dieser Änderungsantrag fügt die Atlas-Hybrid-Test-Suite in die Teststrategie ein.
+
+Die Atlas-Hybrid-Test-Suite wird als eigene Datei `ops/VALIDATION_ATLAS.md` geführt und in diesem Dokument referenziert.
+
+Regeln:
+
+- Dieser Änderungsantrag definiert keine neuen Verträge (→ CONTRACTS.md).
+- Dieser Änderungsantrag definiert keine neuen Sicherheitsregeln (→ CHARTER.md).
+- Die Atlas-Hybrid-Tests respektieren das Blackboard-Pattern und die Trennung von Operational und Scientific.
+- Questor erhält auch in den Tests keine Atlas-Schreibrechte.
+
 ---
 
 ## §1 Validierungs-Übersicht und Grundprinzipien
@@ -27,9 +38,11 @@ Es definiert keine neuen Verträge und keine neuen Sicherheitsregeln.
 ### §1.1 Zweck
 
 Dieses Dokument definiert:
+
 - Die vollständige Testpyramide für MYRMEX v2.4.0 + Questor v0.2.3 + HAL v0.2.0
 - Alle bestehenden Test-Suiten (N, I, S, R, Z, H)
 - Alle neuen Questor-spezifischen Test-Suiten (Q-U, Q-C, Q-S, Q-P, Q-T)
+- Die Atlas-Hybrid-Test-Suite (ATLAS)
 - Testdaten, Fixtures und Mock-Strategie
 - Coverage-Ziele
 - Test-Infrastruktur und CI/CD
@@ -38,17 +51,18 @@ Dieses Dokument definiert:
 ### §1.2 Die sechs Test-Grundprinzipien
 
 | # | Prinzip | Bedeutung | CHARTER-Referenz |
-| :--- | :--- | :--- | :--- |
-| 1 | **Deterministisch vor LLM** | Tests sind deterministisch. Keine echten LLM-Aufrufe. | CHARTER §SR-13 |
-| 2 | **Fail-Closed** | Tests prüfen Fail-Closed-Verhalten an allen kritischen Punkten. | CHARTER §SR-10 |
-| 3 | **Blackboard-Pattern** | Tests prüfen, dass keine direkten Aufrufe zwischen Gremium-Rängen erfolgen. | CHARTER §2 |
-| 4 | **Keine produktiven Altbezeichnungen** | Tests prüfen, dass keine alten Swarm-Begriffe in produktiven Quellen vorkommen. | — |
-| 5 | **Operational ≠ Scientific** | Tests prüfen die strikte Trennung von operationalen und wissenschaftlichen Fehlern. | CHARTER §SR-08 |
-| 6 | **ESTOP ≠ LEASE_DENIED** | Tests prüfen die strikte Trennung von ESTOP und LEASE_DENIED. | CHARTER §SR-09 |
+| --- | --- | --- | --- |
+| 1 | Deterministisch vor LLM | Tests sind deterministisch. Keine echten LLM-Aufrufe. | CHARTER §SR-13 |
+| 2 | Fail-Closed | Tests prüfen Fail-Closed-Verhalten an allen kritischen Punkten. | CHARTER §SR-10 |
+| 3 | Blackboard-Pattern | Tests prüfen, dass keine direkten Aufrufe zwischen Gremium-Rängen erfolgen. | CHARTER §2 |
+| 4 | Keine produktiven Altbezeichnungen | Tests prüfen, dass keine alten Swarm-Begriffe in produktiven Quellen vorkommen. | — |
+| 5 | Operational ≠ Scientific | Tests prüfen die strikte Trennung von operationalen und wissenschaftlichen Fehlern. | CHARTER §SR-08 |
+| 6 | ESTOP ≠ LEASE_DENIED | Tests prüfen die strikte Trennung von ESTOP und LEASE_DENIED. | CHARTER §SR-09 |
 
 ### §1.3 Rolle der Test-KI
 
 Die Test-KI handelt als:
+
 - Senior Test Engineer
 - Systems Integration Reviewer
 - Dry-Run Auditor
@@ -58,6 +72,7 @@ Die Test-KI handelt als:
 ### §1.4 Dry-Run-Modus
 
 Wenn keine Implementierungsfreigabe gegeben ist:
+
 - kein Code
 - keine Dateiänderungen
 - keine pytest-Ausführung
@@ -67,6 +82,7 @@ Wenn keine Implementierungsfreigabe gegeben ist:
 - keine stillschweigenden Annahmen bei unklaren Spezifikationslücken
 
 Wenn kein produktives Repository übergeben wurde:
+
 - N-01 kann nur spezifikationsbasiert bewertet werden
 - der spätere reale Source-Scan ist als Implementierungsbedingung zu nennen
 - das Fehlen eines Repositories ist im Dry-Run eine Modusbedingung, kein Architekturfehler
@@ -74,6 +90,7 @@ Wenn kein produktives Repository übergeben wurde:
 ### §1.5 Implementierungsmodus
 
 Wenn eine Phase explizit freigegeben ist:
+
 - nur die freigegebene Phase implementieren
 - pytest verwenden
 - keine späteren Phasen vorziehen
@@ -88,40 +105,44 @@ Wenn eine Phase explizit freigegeben ist:
 
 ```
                     /\
-                   /  \
-                  / E2E \          ← Suite S (5 Tests, existiert)
-                 /________\
-                /          \
-               / Integration\      ← Suite I (18 Tests, existiert)
-              /______________\
-             /                \
-            /   Komponententests\    ← NEU: ~44 Tests
-           /____________________\
-          /                      \
-         /      Unit-Tests       \  ← NEU: ~252 Tests
-        /__________________________\
-       /                            \
-      /    Sicherheit / Performance  \  ← NEU: ~51 Tests
-     /________________________________\
+                    /  \
+                   / E2E \          ← Suite S (5 Tests, existiert)
+                  /________\
+                 /          \
+                / Integration\      ← Suite I (18 Tests, existiert)
+               /______________\
+              /                \
+             /   Komponententests\    ← NEU: ~44 Tests
+            /____________________\
+           /                      \
+          /      Unit-Tests       \  ← NEU: ~252 Tests
+         /__________________________\
+        /                            \
+       /    Atlas-Hybrid-Tests       \  ← NEU: ~120 Tests
+      /________________________________\
+     /                                  \
+    /    Sicherheit / Performance / Stress\  ← NEU: ~51 Tests
+   /______________________________________\
 ```
 
 ### §2.2 Test-Verteilung
 
 | Ebene | Anzahl | Anteil | Zweck |
-| :--- | :--- | :--- | :--- |
-| Unit-Tests | ~252 | 60% | Einzelne Funktionen und Klassen |
+| --- | --- | --- | --- |
+| Unit-Tests | ~252 | 55% | Einzelne Funktionen und Klassen |
 | Komponententests | ~44 | 10% | Zusammenspiel mehrerer Module |
 | Sicherheitstests | ~30 | 7% | Sicherheitskritische Pfade |
 | Performance-/Stress-Tests | ~21 | 5% | Last, Latenz, Ressourcen |
+| Atlas-Hybrid-Tests | ~120 | 26% | Atlas-Hybrid-System (NEU) |
 | Integrationstests (bestehend) | 18 | 4% | Questor ↔ Gremium (Suite I) |
 | Szenario-Tests (bestehend) | 5 | 1% | End-to-End (Suite S) |
 | Sonstige bestehende Tests | 51 | 12% | Suite N, R, Z, H |
-| **Gesamt** | **~421** | **100%** | |
+| Gesamt | ~541 | 100% | |
 
 ### §2.3 Test-Suiten-Übersicht
 
 | Suite | Tests | Status | Zweck |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | Suite N | 7 | Existiert | Naming & Contract Migration |
 | Suite I | 18 | Existiert | Integration |
 | Suite S | 5 | Existiert | Szenario-Pflichttests |
@@ -133,7 +154,8 @@ Wenn eine Phase explizit freigegeben ist:
 | Suite Q-S | ~30 | NEU | Questor Sicherheits-Tests |
 | Suite Q-P | ~10 | NEU | Questor Performance-Tests |
 | Suite Q-T | ~11 | NEU | Questor Stress-Tests |
-| **Gesamt** | **~421** | | |
+| Suite ATLAS | ~120 | NEU | Atlas-Hybrid-System |
+| Gesamt | ~541 | | |
 
 ---
 
@@ -142,7 +164,7 @@ Wenn eine Phase explizit freigegeben ist:
 ### §3.1 Suite N — Naming & Contract Migration (7 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | N-01 | Keine produktiven Altbezeichnungen | Keine Treffer in produktiven Quellen. Treffer nur in Migrations-/Archiv-/Testdokumenten oder Allowlists erlaubt. Keine aktive Adapterlogik. |
 | N-02 | QuestorErgebnisPaket validiert | Pydantic-Validierung erfolgreich. `questor_instance_id` vorhanden. `sequence_number` vorhanden. `idempotency_key` korrekt kanonisch gebildet. `questor_metadata` optional. Keine freien Zusatzfelder außerhalb von `questor_metadata`. |
 | N-03 | Archivar nutzt questor_instance_id | Monotone Sequence wird akzeptiert. Doppelte oder rückläufige Sequence wird abgelehnt. Keine alte Instanz-ID wird geprüft. |
@@ -154,7 +176,7 @@ Wenn eine Phase explizit freigegeben ist:
 ### §3.2 Suite I — Integration (18 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | I-01 | Happy Path Szenario A | Questor führt aus. Ergebnis: `status: erfolgreich`, `abbruch_grund: null`, `abbruch_klasse: OPERATIONAL`. Archivar empfängt Ergebnis. Kristallkandidaten werden verarbeitet. Keine Blackbox-Inhalte im Gremium. |
 | I-02 | Invalides Paket | Questor bricht ab. Vollständiges Ergebnis: `status: abgebrochen`, `abbruch_grund: PACKAGE_INVALID`, `abbruch_klasse: OPERATIONAL`, `vollstaendig_flag: true`. Archivar kann Ergebnis verarbeiten. Keine HAL-Aktion. |
 | I-03 | Direktes ResearchPackage verboten | `abbruch_grund: DIRECT_PACKAGE_FORBIDDEN`. `abbruch_klasse: OPERATIONAL`. Vollständiges Ergebnis. |
@@ -177,7 +199,7 @@ Wenn eine Phase explizit freigegeben ist:
 ### §3.3 Suite S — Szenario-Pflichttests (5 Tests)
 
 | Test-ID | Szenario | Fokus |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | S-A | Chemie — Kinetik-Optimierung | Happy Path, Envelope, Lease, HAL, Archivar, Kristallkandidaten |
 | S-B | Biologie — Zellkultur / UV-Exposition | Routing-Schleife, `max_loop_iterations`, LEASE_DENIED, keine ESTOP durch Ressourcenkonflikt, Langzeit-Prozess mit SAFE_HOLD |
 | S-C | Materialwissenschaft — Katalysator-Entdeckung | Gefahren, ESTOP, SAFETY_HOLD, Sicherheitsklassifikation, Hardware-Interlock |
@@ -187,7 +209,7 @@ Wenn eine Phase explizit freigegeben ist:
 ### §3.4 Suite R — Regressions-Tests aus v2.3.1 (12 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | R-01 | Crash in Stufe 6 | Recovery bleibt in Stufe 7, nicht Stufe 8. Kein vorzeitiger Questor-Dispatch. |
 | R-02 | Slot-Konflikt | LEASE_DENIED. Kein ESTOP. Questor behandelt operational. |
 | R-03 | Seher-Halluzination | Veto ohne Evidenz → `SEHER_INVALID_VETO`. Keine blinde Freigabe. Bei Kanzler-Bestätigung Policy-Veto statt rotem Signal. |
@@ -204,7 +226,7 @@ Wenn eine Phase explizit freigegeben ist:
 ### §3.5 Suite Z — Zielpräzisierung (8 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | Z-01 | Kanonische Referenz und Begleitdokument | `structure_standalone_v2.4.0.md` Version 1.1.1 ist primäre Referenz. `structure_hal_v0.2.0.md` ist HAL-spezifische Referenz. `structure_standalone_questor_v0.2.3.md` ist unterstützendes Begleitdokument. Konfliktauflösung ist definiert. Formulierungen im Begleitdokument, die eine primäre Gesamtreferenz beanspruchen, sind nicht bindend. |
 | Z-02 | Idempotency-Key-Kanonicalisierung und attempt_id | `idempotency_key = package_id:zyklus_id:attempt_id`. Keine Whitespace. Keine mehrdeutige Serialisierung. `package_id` und `zyklus_id` entsprechen dem erlaubten Regex. `attempt_id >= 0`. `attempt_id <= 999999`. Führende Nullen sind in der kanonischen Form verboten. Maximale Länge des Keys ist 264 Zeichen. Ungültige Eingaben führen zu `PACKAGE_INVALID`. |
 | Z-03 | Erfolgssemantik von abbruch_klasse | `status: erfolgreich`. `abbruch_grund: null`. `abbruch_klasse: OPERATIONAL`. Die Semantik ist als Ergebnisklasse dokumentiert. `abbruch_klasse` darf bei Erfolg nicht als tatsächlicher Abbruch interpretiert werden. |
@@ -217,7 +239,7 @@ Wenn eine Phase explizit freigegeben ist:
 ### §3.6 Suite H — HAL v0.2.0 (24 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | H-01 | EnvironmentManifest ist vollständig | Manifest enthält Slots, Zonen, Capabilities, Timeout-Grenzen, ESTOP-Mechanismus, Resource-Classes, `supported_security_modes`. |
 | H-02 | Kommando ohne Lease wird abgelehnt | `status: DENIED`. `error_code: LEASE_INVALID`. `error_class: OPERATIONAL`. Keine Ausführung. |
 | H-03 | Ungültige Lease wird abgelehnt | `status: DENIED`. `error_code: LEASE_INVALID`. Keine Ausführung. |
@@ -252,12 +274,12 @@ Wenn eine Phase explizit freigegeben ist:
 #### §4.1.1 `sanitization.py` (18 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | U-SAN-01 | Feld-Whitelist: Nur erlaubte Felder passieren | Nicht-erlaubte Felder werden entfernt |
 | U-SAN-02 | Feld-Blocklist: `atlas_version_ref`, `gate_record_ref` werden blockiert | Blockierte Felder sind nicht im Output |
-| U-SAN-03 | Injection-Pattern INJ-01: "ignore all previous instructions" | `injection_detected = true`, Feld wird quarantänen |
-| U-SAN-04 | Injection-Pattern INJ-04: "ESTOP" im Freitext | `injection_detected = true`, Feld wird quarantänen |
-| U-SAN-05 | Injection-Pattern INJ-05: "setze ESTOP zurück" | `injection_detected = true`, Feld wird quarantänen |
+| U-SAN-03 | Injection-Pattern INJ-01: `"ignore all previous instructions"` | `injection_detected = true`, Feld wird quarantänen |
+| U-SAN-04 | Injection-Pattern INJ-04: `"ESTOP"` im Freitext | `injection_detected = true`, Feld wird quarantänen |
+| U-SAN-05 | Injection-Pattern INJ-05: `"setze ESTOP zurück"` | `injection_detected = true`, Feld wird quarantänen |
 | U-SAN-06 | Control-Characters werden entfernt | Output enthält keine Control-Chars |
 | U-SAN-07 | Zero-Width-Chars werden entfernt | Output enthält keine Zero-Width-Chars |
 | U-SAN-08 | Text über `max_length` wird abgeschnitten | Text ist auf `max_length` begrenzt |
@@ -275,7 +297,7 @@ Wenn eine Phase explizit freigegeben ist:
 #### §4.1.2 `capability_registry.py` (22 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | U-CAP-01 | Registry laden: gültige YAML-Dateien | Registry wird geladen, `capability_count` korrekt |
 | U-CAP-02 | Registry laden: ungültige YAML-Datei | Questor startet nicht, Fehler wird protokolliert |
 | U-CAP-03 | Registry laden: doppelte `capability_id` | Questor startet nicht, Fehler wird protokolliert |
@@ -286,12 +308,12 @@ Wenn eine Phase explizit freigegeben ist:
 | U-CAP-08 | `check_capability`: Capability nicht in allowed_capabilities | `status = SECURITY_RESTRICTED` |
 | U-CAP-09 | `check_capability`: Security-Mode passt nicht | `status = SECURITY_RESTRICTED` |
 | U-CAP-10 | `validate_parameters`: Alle Pflichtfelder vorhanden | Keine Fehler |
-| U-CAP-11 | `validate_parameters`: Pflichtfeld fehlt | `MISSING_REQUIRED_PARAMETER` |
-| U-CAP-12 | `validate_parameters`: FLOAT außerhalb Bounds | `BELOW_MIN` oder `ABOVE_MAX` |
-| U-CAP-13 | `validate_parameters`: STRING zu lang | `TOO_LONG` |
-| U-CAP-14 | `validate_parameters`: ENUM-Wert ungültig | `INVALID_ENUM` |
-| U-CAP-15 | `validate_parameters`: NaN | `NAN_PARAMETER` |
-| U-CAP-16 | `validate_parameters`: Infinity | `INFINITY_PARAMETER` |
+| U-CAP-11 | `validate_parameters`: Pflichtfeld fehlt | MISSING_REQUIRED_PARAMETER |
+| U-CAP-12 | `validate_parameters`: FLOAT außerhalb Bounds | BELOW_MIN oder ABOVE_MAX |
+| U-CAP-13 | `validate_parameters`: STRING zu lang | TOO_LONG |
+| U-CAP-14 | `validate_parameters`: ENUM-Wert ungültig | INVALID_ENUM |
+| U-CAP-15 | `validate_parameters`: NaN | NAN_PARAMETER |
+| U-CAP-16 | `validate_parameters`: Infinity | INFINITY_PARAMETER |
 | U-CAP-17 | `get_slots_for_capability`: Ein Slot verfügbar | Liste mit einer Slot-ID |
 | U-CAP-18 | `get_slots_for_capability`: Mehrere Slots verfügbar | Liste mit mehreren Slot-IDs |
 | U-CAP-19 | `get_slots_for_capability`: Kein Slot verfügbar | Leere Liste |
@@ -302,7 +324,7 @@ Wenn eine Phase explizit freigegeben ist:
 #### §4.1.3 `security_mode.py` (11 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | U-SM-01 | `get_effective_security_mode`: Paket NORMAL, Gate NORMAL, System NORMAL | NORMAL |
 | U-SM-02 | `get_effective_security_mode`: Paket NORMAL, Gate SANDBOX | SANDBOX (restriktiver) |
 | U-SM-03 | `get_effective_security_mode`: Paket NORMAL, System RECOVERY | RECOVERY (restriktiver) |
@@ -318,7 +340,7 @@ Wenn eine Phase explizit freigegeben ist:
 #### §4.1.4 `shutdown.py` (13 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | U-SD-01 | SIGTERM empfangen | `shutdown_requested = true`, Timer startet |
 | U-SD-02 | Graceful-Shutdown in IDLE | Sofort beenden, `ShutdownResult.status = COMPLETED` |
 | U-SD-03 | Graceful-Shutdown in EXECUTING | HAL-Kommando abwarten, Ergebnis bauen |
@@ -336,7 +358,7 @@ Wenn eine Phase explizit freigegeben ist:
 #### §4.1.5 `health_monitor.py` (15 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | U-HM-01 | Heartbeat schreiben | `health.json` wird geschrieben |
 | U-HM-02 | Heartbeat atomar schreiben (temp + rename) | Keine korrupte Datei |
 | U-HM-03 | Heartbeat bei Disk-Full | Fehler protokolliert, Questor arbeitet weiter |
@@ -349,14 +371,14 @@ Wenn eine Phase explizit freigegeben ist:
 | U-HM-10 | `determine_health_status`: Alle Checks OK | HEALTHY |
 | U-HM-11 | `determine_health_status`: Heartbeat veraltet | UNHEALTHY |
 | U-HM-12 | `determine_health_status`: Prozess läuft nicht | DEAD |
-| U-HM-13 | Externer Monitor: `health.json` lesen | `HealthCheckResult` korrekt |
+| U-HM-13 | Externer Monitor: `health.json` lesen | HealthCheckResult korrekt |
 | U-HM-14 | Externer Monitor: `health.json` fehlt | `overall_status = DEAD` |
 | U-HM-15 | Alert-Cooldown | Kein zweiter Alert innerhalb von `alert_cooldown_s` |
 
 #### §4.1.6 `trail_map.py` (11 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | U-TRAIL-01 | Trail erstellen mit `create_trails = true` | Trail wird erstellt |
 | U-TRAIL-02 | Trail erstellen mit `create_trails = false` | Trail wird NICHT erstellt |
 | U-TRAIL-03 | Trail mit `require_evidence = true` und Evidenz vorhanden | Trail wird erstellt |
@@ -372,7 +394,7 @@ Wenn eine Phase explizit freigegeben ist:
 #### §4.1.7 `queue_integration.py` (14 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | U-QI-01 | Dispatcher schreibt Envelope in `pending/` | Datei wird erstellt, Registry aktualisiert |
 | U-QI-02 | Dispatcher schreibt dupliziertes Envelope | Duplikat wird abgelehnt |
 | U-QI-03 | Dispatcher schreibt ohne `gate_record_ref` | Fehler, Envelope wird nicht geschrieben |
@@ -380,38 +402,38 @@ Wenn eine Phase explizit freigegeben ist:
 | U-QI-05 | Questor verschiebt Envelope nach `processing/` | Datei wird verschoben, Registry aktualisiert |
 | U-QI-06 | Questor schreibt Result nach `completed/` | Datei wird erstellt, Registry aktualisiert |
 | U-QI-07 | Questor schreibt Result nach `failed/` | Datei wird erstellt, Registry aktualisiert |
-| U-QI-08 | Receiver liest Result aus `completed/` | `QuestorErgebnisPaket` wird gelesen |
+| U-QI-08 | Receiver liest Result aus `completed/` | QuestorErgebnisPaket wird gelesen |
 | U-QI-09 | Receiver validiert `vollstaendig_flag` | `false` → Ergebnis wird nicht verarbeitet |
 | U-QI-10 | Delete-Request für Paket in `pending/` | Paket wird gelöscht |
 | U-QI-11 | Delete-Request für Paket in `processing/` | Paket wird NICHT gelöscht |
 | U-QI-12 | Registry-Lock: Zwei Prozesse schreiben gleichzeitig | Kein Race Condition |
-| U-QI-13 | Envelope-Datei ist korrupt | `QUEUE_FILE_CORRUPT`, Datei wird quarantänen |
+| U-QI-13 | Envelope-Datei ist korrupt | QUEUE_FILE_CORRUPT, Datei wird quarantänen |
 | U-QI-14 | `registry.json` ist korrupt | Registry wird aus Dateien rekonstruiert |
 
 #### §4.1.8 Weitere Module (~148 Tests)
 
 | Modul | Test-Anzahl | Schwerpunkte |
-| :--- | :--- | :--- |
-| `objective_parser.py` | 10 | Keyword-Matching, Clarity-Score |
-| `compass.py` | 20 | Loop Selection, Ranking, Candidate-Window |
-| `policy_evaluator.py` | 15 | Alle 8 Prüfungen, VETO/GO |
-| `loop_registry.py` | 10 | Template laden, validieren, filtern |
-| `ledger.py` | 15 | Hash-Chain, Genesis-Hash, NaN/Infinity |
-| `safety_monitor.py` | 10 | ESTOP, Interlock, Timeout |
-| `recovery.py` | 12 | WAL lesen, Checkpoint finden, Reconcile |
-| `sequence.py` | 8 | Atomare Persistierung, Datei-Lock |
-| `hal_bridge.py` | 20 | Übersetzung, Ergebnisverarbeitung, Idempotenz |
-| `result_builder.py` | 20 | Feldzuordnung, Kristallkandidaten, Signale |
-| `blackbox_archiver.py` | 8 | Retention-Class, Limits, Rotation |
+| --- | --- | --- |
+| objective_parser.py | 10 | Keyword-Matching, Clarity-Score |
+| compass.py | 20 | Loop Selection, Ranking, Candidate-Window |
+| policy_evaluator.py | 15 | Alle 8 Prüfungen, VETO/GO |
+| loop_registry.py | 10 | Template laden, validieren, filtern |
+| ledger.py | 15 | Hash-Chain, Genesis-Hash, NaN/Infinity |
+| safety_monitor.py | 10 | ESTOP, Interlock, Timeout |
+| recovery.py | 12 | WAL lesen, Checkpoint finden, Reconcile |
+| sequence.py | 8 | Atomare Persistierung, Datei-Lock |
+| hal_bridge.py | 20 | Übersetzung, Ergebnisverarbeitung, Idempotenz |
+| result_builder.py | 20 | Feldzuordnung, Kristallkandidaten, Signale |
+| blackbox_archiver.py | 8 | Retention-Class, Limits, Rotation |
 
-**Gesamt Unit-Tests: ~252**
+Gesamt Unit-Tests: ~252
 
 ### §4.2 Suite Q-C — Questor Komponententests (~44 Tests)
 
 #### §4.2.1 QuestCompass (15 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | C-QC-01 | Objective Analysis: `objective_type` explizit gesetzt | Stufe 1 wird verwendet, kein LLM |
 | C-QC-02 | Objective Analysis: Keyword-Matching | Stufe 2 wird verwendet |
 | C-QC-03 | Objective Analysis: LLM-Clarification | Stufe 2.5 wird verwendet |
@@ -431,7 +453,7 @@ Wenn eine Phase explizit freigegeben ist:
 #### §4.2.2 PolicyEvaluator (9 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | C-PE-01 | Alle Prüfungen bestanden | GO |
 | C-PE-02 | ESTOP aktiv | VETO (SAFETY_ACTIVE) |
 | C-PE-03 | Außerhalb Routing-Graph | VETO (OUTSIDE_ROUTING_GRAPH) |
@@ -445,22 +467,22 @@ Wenn eine Phase explizit freigegeben ist:
 #### §4.2.3 HAL-Bridge (10 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | C-HB-01 | LoopStep → HALCommand übersetzen | Korrekte Felder |
 | C-HB-02 | LoopStep → ProcessCommand übersetzen | Korrekte Felder |
-| C-HB-03 | HALCommandResult SUCCESS → Weiter im Loop | `BridgeResult.status = SUCCESS` |
-| C-HB-04 | HALCommandResult ESTOP → SAFETY_ABORT | `BridgeResult.status = SAFETY_ABORT` |
-| C-HB-05 | HALCommandResult LEASE_DENIED → OPERATIONAL_ABORT | `BridgeResult.status = OPERATIONAL_ABORT` |
-| C-HB-06 | HALCommandResult DUPLICATE_BLOCKED → SUCCESS | `BridgeResult.status = SUCCESS` |
+| C-HB-03 | HALCommandResult SUCCESS → Weiter im Loop | BridgeResult.status = SUCCESS |
+| C-HB-04 | HALCommandResult ESTOP → SAFETY_ABORT | BridgeResult.status = SAFETY_ABORT |
+| C-HB-05 | HALCommandResult LEASE_DENIED → OPERATIONAL_ABORT | BridgeResult.status = OPERATIONAL_ABORT |
+| C-HB-06 | HALCommandResult DUPLICATE_BLOCKED → SUCCESS | BridgeResult.status = SUCCESS |
 | C-HB-07 | Parameter-Validierung vor Senden | Ungültige Parameter → nicht senden |
 | C-HB-08 | Idempotenz-Key erzeugen | `command_id:lease_ref:slot_id` |
 | C-HB-09 | Kosten aktualisieren nach Ausführung | `accumulated_cost` korrekt |
-| C-HB-10 | Prozess in SAFE_HOLD versetzen | `ProcessResult.process_state = SAFE_HOLD` |
+| C-HB-10 | Prozess in SAFE_HOLD versetzen | ProcessResult.process_state = SAFE_HOLD |
 
 #### §4.2.4 Result-Builder (10 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | C-RB-01 | Ergebnis bei Erfolg bauen | `status = erfolgreich`, `abbruch_klasse = OPERATIONAL` |
 | C-RB-02 | Ergebnis bei OPERATIONAL-Abbruch bauen | `status = abgebrochen`, `abbruch_klasse = OPERATIONAL` |
 | C-RB-03 | Ergebnis bei SCIENTIFIC-Abbruch bauen | `status = fehlgeschlagen`, `abbruch_klasse = SCIENTIFIC` |
@@ -472,14 +494,14 @@ Wenn eine Phase explizit freigegeben ist:
 | C-RB-09 | Guardian-Validierung: NaN in ergebnis_daten | `guardian_status = FAIL` |
 | C-RB-10 | Blackbox schreiben | `retention_class` korrekt |
 
-**Gesamt Komponententests: ~44**
+Gesamt Komponententests: ~44
 
 ### §4.3 Suite Q-S — Questor Sicherheits-Tests (~30 Tests)
 
 #### §4.3.1 Prompt-Injection (10 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | SEC-PI-01 | Injection über `ziel` | Feld wird quarantänen, LLM-Aufruf ohne `ziel` |
 | SEC-PI-02 | Injection über `kontext.zusammenfassung` | Feld wird quarantänen |
 | SEC-PI-03 | Injection über `planning_hints.hinweis_text` | Feld wird quarantänen |
@@ -494,7 +516,7 @@ Wenn eine Phase explizit freigegeben ist:
 #### §4.3.2 Capability-Bypass (5 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | SEC-CB-01 | Template fordert nicht registrierte Capability | VETO (CAPABILITY_UNAVAILABLE) |
 | SEC-CB-02 | Template fordert Capability außerhalb allowed_capabilities | VETO (SECURITY_RESTRICTED) |
 | SEC-CB-03 | LLM schlägt Capability außerhalb allowed_capabilities vor | Vorschlag wird verworfen |
@@ -504,7 +526,7 @@ Wenn eine Phase explizit freigegeben ist:
 #### §4.3.3 Security-Mode-Eskalation (5 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | SEC-SM-01 | Paket fordert NORMAL, Gate erlaubt nur SANDBOX | PACKAGE_INVALID |
 | SEC-SM-02 | Paket fordert NORMAL, Slot ist nur sandbox_capable | PHYSICAL_EXECUTION_FORBIDDEN |
 | SEC-SM-03 | LLM versucht, security_mode zu ändern | LLM-Output wird verworfen |
@@ -514,7 +536,7 @@ Wenn eine Phase explizit freigegeben ist:
 #### §4.3.4 WAL-Manipulation (3 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | SEC-WAL-01 | WAL-Datei wird extern verändert | Hash-Chain-Prüfung schlägt fehl, RECOVERY_UNSAFE |
 | SEC-WAL-02 | WAL-Datei wird gelöscht | RECOVERY_UNSAFE |
 | SEC-WAL-03 | WAL-Eintrag wird nachträglich geändert | Hash-Chain-Prüfung schlägt fehl |
@@ -522,7 +544,7 @@ Wenn eine Phase explizit freigegeben ist:
 #### §4.3.5 Queue-Manipulation (5 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | SEC-QM-01 | Envelope-Datei wird extern verändert | Validierung schlägt fehl, PACKAGE_INVALID |
 | SEC-QM-02 | Result-Datei wird extern verändert | Receiver-Validierung schlägt fehl |
 | SEC-QM-03 | Registry.json wird extern verändert | Registry wird aus Dateien rekonstruiert |
@@ -532,16 +554,16 @@ Wenn eine Phase explizit freigegeben ist:
 #### §4.3.6 LLM-Output-Manipulation (2 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | SEC-LLM-01 | LLM-Output enthält versteckte JSON-Instruktionen | Schema-Validierung lehnt unbekannte Felder ab |
 | SEC-LLM-02 | LLM-Output enthält Unicode-Escapes die bei Dekodierung Injektionen ergeben | Sanitization erkennt und blockiert |
 
-**Gesamt Sicherheitstests: ~30**
+Gesamt Sicherheitstests: ~30
 
 ### §4.4 Suite Q-P — Questor Performance-Tests (~10 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | PERF-01 | Paket-Validierung (Envelope) | < 100ms |
 | PERF-02 | Objective Analysis (deterministisch) | < 50ms |
 | PERF-03 | Loop Selection (5 Templates) | < 200ms |
@@ -556,7 +578,7 @@ Wenn eine Phase explizit freigegeben ist:
 ### §4.5 Suite Q-T — Questor Stress-Tests (~11 Tests)
 
 | Test-ID | Test | Erwartet |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | STRESS-01 | Queue mit 100 Paketen in `pending/` | Questor verarbeitet sequentiell, ältestes zuerst |
 | STRESS-02 | WAL mit 10.000 Einträgen | Recovery funktioniert, Hash-Chain prüft |
 | STRESS-03 | Ledger mit 5.000 Einträgen | Ergebnis wird korrekt gebaut |
@@ -569,7 +591,30 @@ Wenn eine Phase explizit freigegeben ist:
 | LOAD-02 | 1 Paket mit 100 Iterationen | Budget wird korrekt getrackt |
 | LOAD-03 | 1 Langzeit-Prozess (72h) | SAFE_HOLD und RESUME funktionieren |
 
-**Gesamt Performance/Stress-Tests: ~21**
+Gesamt Performance/Stress-Tests: ~21
+
+### §4.6 Suite ATLAS — Atlas-Hybrid-Tests (~120 Tests)
+
+Die vollständige Spezifikation der Atlas-Hybrid-Test-Suite ist in `ops/VALIDATION_ATLAS.md` definiert.
+
+#### §4.6.1 Übersicht der Atlas-Test-Bereiche
+
+| Bereich | Test-Präfix | Anzahl | Zweck |
+| --- | --- | --- | --- |
+| Verträge | ATLAS-CTR | ~15 | Pydantic-Validierung der Atlas-Hybrid-Verträge |
+| Semantik | ATLAS-SEM | ~20 | Evidence-Semantik, Erwartungsprüfung |
+| Topologie | ATLAS-TOPO | ~15 | Dimensionen, Zonen, Knoten, Kanten |
+| Integrität | ATLAS-INT | ~15 | Fracture, Confidence, Uncertainty, Zone-Health |
+| Diagnostik | ATLAS-DIAG | ~10 | DiagnosticResolution, Heilung |
+| Sicherheit | ATLAS-SAF | ~10 | SafetyConstraint, ExclusionConstraint, LOCKED |
+| Frontier | ATLAS-FRNT | ~15 | FrontierEngine, FrontierCandidate |
+| Themen | ATLAS-TOP | ~10 | ResearchTopic, ExplorationPolicy |
+| Domänen | ATLAS-DOM | ~10 | Chemie, Biologie, Physik, ML Integration |
+| Gesamt | | ~120 | |
+
+#### §4.6.2 Referenz
+
+→ Siehe `ops/VALIDATION_ATLAS.md` für die vollständige Test-Spezifikation.
 
 ---
 
@@ -579,61 +624,74 @@ Wenn eine Phase explizit freigegeben ist:
 
 ```
 tests/
-  └── test_questor/
-      ├── fixtures/
-      │   ├── envelopes/
-      │   │   ├── valid_envelope.json
-      │   │   ├── invalid_envelope_no_gate.json
-      │   │   ├── invalid_envelope_no_lease.json
-      │   │   └── envelope_with_injection.json
-      │   ├── templates/
-      │   │   ├── chemie_optimize_v1.yaml
-      │   │   ├── biologie_incubation_v1.yaml
-      │   │   ├── ml_training_v1.yaml
-      │   │   └── recovery_reconcile_v1.yaml
-      │   ├── capabilities/
-      │   │   ├── pipette.transfer.yaml
-      │   │   ├── spectrometer.measure_absorbance.yaml
-      │   │   └── gpu.train.yaml
-      │   ├── hal_manifests/
-      │   │   ├── normal_manifest.json
-      │   │   ├── sandbox_manifest.json
-      │   │   └── recovery_manifest.json
-      │   ├── wal/
-      │   │   ├── valid_wal/
-      │   │   ├── corrupt_wal/
-      │   │   └── empty_wal/
-      │   └── results/
-      │       ├── successful_result.json
-      │       ├── operational_abort_result.json
-      │       ├── scientific_abort_result.json
-      │       └── safety_abort_result.json
-      ├── mocks/
-      │   ├── mock_hal.py
-      │   ├── mock_llm.py
-      │   ├── mock_resource_governor.py
-      │   └── mock_filesystem.py
-      └── conftest.py
+   └── test_questor/
+       ├── fixtures/
+       │   ├── envelopes/
+       │   │   ├── valid_envelope.json
+       │   │   ├── invalid_envelope_no_gate.json
+       │   │   ├── invalid_envelope_no_lease.json
+       │   │   └── envelope_with_injection.json
+       │   ├── templates/
+       │   │   ├── chemie_optimize_v1.yaml
+       │   │   ├── biologie_incubation_v1.yaml
+       │   │   ├── ml_training_v1.yaml
+       │   │   └── recovery_reconcile_v1.yaml
+       │   ├── capabilities/
+       │   │   ├── pipette.transfer.yaml
+       │   │   ├── spectrometer.measure_absorbance.yaml
+       │   │   └── gpu.train.yaml
+       │   ├── hal_manifests/
+       │   │   ├── normal_manifest.json
+       │   │   ├── sandbox_manifest.json
+       │   │   └── recovery_manifest.json
+       │   ├── wal/
+       │   │   ├── valid_wal/
+       │   │   ├── corrupt_wal/
+       │   │   └── empty_wal/
+       │   └── results/
+       │       ├── successful_result.json
+       │       ├── operational_abort_result.json
+       │       ├── scientific_abort_result.json
+       │       └── safety_abort_result.json
+       ├── mocks/
+       │   ├── mock_hal.py
+       │   ├── mock_llm.py
+       │   ├── mock_resource_governor.py
+       │   └── mock_filesystem.py
+       └── conftest.py
+   └── test_atlas/
+       ├── fixtures/
+       │   ├── evidence_events/
+       │   ├── atlas_nodes/
+       │   ├── atlas_edges/
+       │   ├── zone_geometries/
+       │   ├── safety_constraints/
+       │   ├── frontier_candidates/
+       │   └── diagnostic_resolutions/
+       ├── mocks/
+       │   └── mock_cartographer.py
+       └── conftest.py
 ```
 
 ### §5.2 Mock-Strategie
 
 | Mock | Zweck |
-| :--- | :--- |
-| `mock_hal.py` | Simuliert HAL-Antworten (SUCCESS, DENIED, ESTOP, etc.) |
-| `mock_llm.py` | Simuliert LLM-Antworten (JSON, Timeout, Injection) |
-| `mock_resource_governor.py` | Simuliert Lease-Vergabe und -Ablehnung |
-| `mock_filesystem.py` | Simuliert Disk-Full, Permission-Error, etc. |
+| --- | --- |
+| mock_hal.py | Simuliert HAL-Antworten (SUCCESS, DENIED, ESTOP, etc.) |
+| mock_llm.py | Simuliert LLM-Antworten (JSON, Timeout, Injection) |
+| mock_resource_governor.py | Simuliert Lease-Vergabe und -Ablehnung |
+| mock_filesystem.py | Simuliert Disk-Full, Permission-Error, etc. |
+| mock_cartographer.py | Simuliert Kartograph-Operationen für Atlas-Tests |
 
 ### §5.3 Testdaten-Regeln
 
 | Regel | Beschreibung |
-| :--- | :--- |
+| --- | --- |
 | TD-1 | Testdaten sind deterministisch. Keine Zufälligkeit. |
 | TD-2 | Testdaten enthalten keine echten Forschungsdaten. |
 | TD-3 | Testdaten enthalten keine echten Gate-Records. |
 | TD-4 | Testdaten enthalten keine echten Lease-Tokens. |
-| TD-5 | Testdaten sind in `tests/test_questor/fixtures/` gespeichert. |
+| TD-5 | Testdaten sind in `tests/test_questor/fixtures/` und `tests/test_atlas/fixtures/` gespeichert. |
 | TD-6 | Testdaten sind versioniert (git). |
 
 ---
@@ -643,29 +701,33 @@ tests/
 ### §6.1 Mindestabdeckung pro Modul
 
 | Modul | Mindestabdeckung | Begründung |
-| :--- | :--- | :--- |
-| `sanitization.py` | 95% | Sicherheitskritisch |
-| `capability_registry.py` | 90% | Sicherheitskritisch |
-| `security_mode.py` | 95% | Sicherheitskritisch |
-| `policy_evaluator.py` | 95% | Sicherheitskritisch |
-| `safety_monitor.py` | 95% | Sicherheitskritisch |
-| `shutdown.py` | 90% | Crash-Sicherheit |
-| `health_monitor.py` | 85% | Betriebssicherheit |
-| `hal_bridge.py` | 90% | Hardware-Zugriff |
-| `result_builder.py` | 90% | Ergebnis-Integrität |
-| `ledger.py` | 90% | Datenintegrität |
-| `recovery.py` | 90% | Crash-Recovery |
-| `compass.py` | 85% | Kernlogik |
-| `trail_map.py` | 80% | Operational |
-| `queue_integration.py` | 85% | Betriebskritisch |
-| `facade.py` | 85% | Eintrittspunkt |
-| `validator.py` | 90% | Eintrittspunkt |
-| **Gesamt** | **≥ 88%** | |
+| --- | --- | --- |
+| sanitization.py | 95% | Sicherheitskritisch |
+| capability_registry.py | 90% | Sicherheitskritisch |
+| security_mode.py | 95% | Sicherheitskritisch |
+| policy_evaluator.py | 95% | Sicherheitskritisch |
+| safety_monitor.py | 95% | Sicherheitskritisch |
+| shutdown.py | 90% | Crash-Sicherheit |
+| health_monitor.py | 85% | Betriebssicherheit |
+| hal_bridge.py | 90% | Hardware-Zugriff |
+| result_builder.py | 90% | Ergebnis-Integrität |
+| ledger.py | 90% | Datenintegrität |
+| recovery.py | 90% | Crash-Recovery |
+| compass.py | 85% | Kernlogik |
+| trail_map.py | 80% | Operational |
+| queue_integration.py | 85% | Betriebskritisch |
+| facade.py | 85% | Eintrittspunkt |
+| validator.py | 90% | Eintrittspunkt |
+| atlas_core.py | 90% | Atlas-Hybrid-Kern |
+| frontier_engine.py | 85% | Frontier-Logik |
+| diagnostic_resolution.py | 90% | Diagnostik-Logik |
+| safety_constraint.py | 95% | Sicherheitskritisch |
+| Gesamt | ≥ 88% | |
 
 ### §6.2 Coverage-Regeln
 
 | Regel | Beschreibung |
-| :--- | :--- |
+| --- | --- |
 | COV-1 | Sicherheitskritische Module haben ≥ 95% Abdeckung. |
 | COV-2 | Kernlogik hat ≥ 85% Abdeckung. |
 | COV-3 | Jeder Fail-Closed-Punkt muss getestet sein. |
@@ -680,7 +742,7 @@ tests/
 ### §7.1 Framework
 
 | Tool | Zweck |
-| :--- | :--- |
+| --- | --- |
 | pytest | Test-Framework |
 | pytest-cov | Code-Coverage |
 | pytest-asyncio | Async-Tests (falls nötig) |
@@ -693,8 +755,8 @@ tests/
 ```ini
 # pytest.ini
 [pytest]
-testpaths = tests/test_questor
-addopts = --cov=src/questor --cov-report=html --cov-report=term-missing
+testpaths = tests/test_questor tests/test_atlas
+addopts = --cov=src/questor --cov=src/gremium --cov-report=html --cov-report=term-missing
 timeout = 60
 markers =
     unit: Unit-Tests
@@ -703,6 +765,7 @@ markers =
     security: Sicherheitstests
     performance: Performance-Tests
     stress: Stress-Tests
+    atlas: Atlas-Hybrid-Tests
     slow: Langsame Tests (> 10s)
 ```
 
@@ -711,7 +774,9 @@ markers =
 ```yaml
 # .github/workflows/questor-tests.yml
 name: Questor Tests
+
 on: [push, pull_request]
+
 jobs:
   unit-tests:
     runs-on: ubuntu-latest
@@ -722,16 +787,25 @@ jobs:
           python-version: '3.10'
       - run: pip install -r requirements.txt
       - run: pytest tests/test_questor -m unit --cov=src/questor
+
   component-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - run: pytest tests/test_questor -m component
+
   security-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - run: pytest tests/test_questor -m security
+
+  atlas-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: pytest tests/test_atlas -m atlas --cov=src/gremium
+
   performance-tests:
     runs-on: ubuntu-latest
     steps:
@@ -755,23 +829,26 @@ PHASE 2: Komponententests (~5 Minuten)
 PHASE 3: Sicherheitstests (~3 Minuten)
   → pytest -m security
 
-PHASE 4: Integrationstests (Suite I, ~10 Minuten)
+PHASE 4: Atlas-Hybrid-Tests (~8 Minuten)
+  → pytest -m atlas
+
+PHASE 5: Integrationstests (Suite I, ~10 Minuten)
   → pytest -m integration
 
-PHASE 5: Szenario-Tests (Suite S, ~15 Minuten)
+PHASE 6: Szenario-Tests (Suite S, ~15 Minuten)
   → pytest -m scenario
 
-PHASE 6: Performance/Stress-Tests (~10 Minuten)
+PHASE 7: Performance/Stress-Tests (~10 Minuten)
   → pytest -m "performance or stress" --timeout=300
 
-PHASE 7: Vollständige Suite (~45 Minuten)
-  → pytest --cov=src/questor
+PHASE 8: Vollständige Suite (~55 Minuten)
+  → pytest --cov=src/questor --cov=src/gremium
 ```
 
 ### §8.2 Test-Gates
 
 | Gate | Bedingung |
-| :--- | :--- |
+| --- | --- |
 | GATE-1 | Alle Unit-Tests bestehen |
 | GATE-2 | Alle Komponententests bestehen |
 | GATE-3 | Alle Sicherheitstests bestehen |
@@ -780,6 +857,7 @@ PHASE 7: Vollständige Suite (~45 Minuten)
 | GATE-6 | Alle Szenario-Tests bestehen (Suite S) |
 | GATE-7 | Performance-Tests innerhalb der Limits |
 | GATE-8 | Keine offenen Blocker |
+| GATE-ATLAS | Alle Atlas-Hybrid-Tests bestehen (Suite ATLAS) |
 
 ---
 
@@ -788,7 +866,7 @@ PHASE 7: Vollständige Suite (~45 Minuten)
 Das Gesamtsystem gilt als integriert, wenn:
 
 | # | Kriterium | CHARTER-Referenz |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | 1 | Alle Naming-Tests bestehen | — |
 | 2 | Alle Integrationstests bestehen | — |
 | 3 | Alle Szenario-Tests bestehen | — |
@@ -819,13 +897,23 @@ Das Gesamtsystem gilt als integriert, wenn:
 | 28 | HAL Compute-Ressourcenmodell unterstützt | CONTRACTS §3.2 |
 | 29 | HAL Parameter-Schema-Registry unterstützt | CONTRACTS §3.3 |
 | 30 | Naming-Allowlist explizit und review-pflichtig ist | — |
+| 31 | Alle Atlas-Hybrid-Verträge sind Pydantic-v2-konform | — |
+| 32 | Leere Zone ist UNEXPLORED, niemals automatisch HEALTHY | — |
+| 33 | ⬜ WEISS erzeugt coverage_energy, keine support_energy | — |
+| 34 | Questor schreibt keine Atlas-Signale | CHARTER §SR-04 |
+| 35 | SafetyConstraint unterliegt keinem automatischen Decay | — |
+| 36 | DiagnosticResolution heilt Fracture nur auditiert | — |
+| 37 | FrontierCandidate enthält strukturierte Begründung | — |
+| 38 | Multi-Objective Trade-offs erzeugen keine Fracture | — |
+| 39 | LOCKED überschreibt alle Frontier-Freigaben | — |
+| 40 | ResearchTopic wird deterministisch auf SATURATED gesetzt | — |
 
 ---
 
 ## §10 Sicherheitsregeln für Tests
 
 | # | Regel | CHARTER-Referenz |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | S1 | Tests dürfen keine echte Hardware ansprechen. | CHARTER §SR-12 |
 | S2 | Tests dürfen keine echten Leases verwenden. | CHARTER §SR-06 |
 | S3 | Tests dürfen keine echten Gate-Records verwenden. | — |
@@ -844,31 +932,26 @@ Das Gesamtsystem gilt als integriert, wenn:
 ### §11.1 Nicht alte Kasten testen
 
 Wenn ein Test alte Kasten wie `AnalystCaste`, `PlannerCaste`, `ExecutorCaste`, `TheoristCaste` als aktive Vertragskomponenten erwartet, ist der Test falsch.
-
 Questor ersetzt nicht diese Kasten direkt, sondern die frühere Black Box aus v2.3.1.
 
 ### §11.2 Keine Blackbox im Archivar
 
 Wenn ein Test erwartet, dass der Archivar QuestorBlackbox liest, ist der Test falsch.
-
 → Siehe CHARTER §SR-07.
 
 ### §11.3 Keine wissenschaftlichen Signale aus operationalen Fehlern
 
 Wenn ein Test OOM, Timeout oder Lease-Konflikt als wissenschaftliches Signal interpretiert, ist der Test falsch.
-
 → Siehe CHARTER §SR-08.
 
 ### §11.4 Kein ESTOP bei Ressourcenkonflikt
 
 Wenn ein Test LEASE_DENIED als ESTOP behandelt, ist der Test falsch.
-
 → Siehe CHARTER §SR-09.
 
 ### §11.5 Kein direkter Atlas-Zugriff durch Questor
 
 Wenn ein Test erwartet, dass Questor direkt Signale in den Atlas schreibt, ist der Test falsch.
-
 → Siehe CHARTER §SR-04.
 
 ### §11.6 Keine Doppelreferenz
@@ -878,43 +961,36 @@ Wenn ein Test zwei primäre Referenzdateien ohne Konflikthierarchie annimmt, ist
 ### §11.7 Keine HAL-Lease-Vergabe
 
 Wenn ein Test erwartet, dass HAL Leases vergibt, ist der Test falsch.
-
 → Siehe CHARTER §SR-06.
 
 ### §11.8 Keine HAL-Wissenschaft
 
 Wenn ein Test erwartet, dass HAL wissenschaftliche Ziele interpretiert oder wissenschaftliche Signale erzeugt, ist der Test falsch.
-
 → Siehe CHARTER §SR-08.
 
 ### §11.9 Kein CUDA-OOM als SAFETY
 
 Wenn ein Test CUDA_OOM als SAFETY oder ESTOP interpretiert, ist der Test falsch.
-
 → Siehe CHARTER §SR-08.
 
 ### §11.10 Kein Hardware-Interlock als OPERATIONAL
 
 Wenn ein Test Hardware-Interlock als OPERATIONAL interpretiert, ist der Test falsch.
-
 → Siehe CHARTER §SR-09.
 
 ### §11.11 Kein blinder Retry nach Crash
 
 Wenn ein Test erwartet, dass HAL nach einem Crash automatisch neu startet, ist der Test falsch.
-
 → Siehe CHARTER §SR-10.
 
 ### §11.12 Keine automatische Interlock-Rücksetzung
 
 Wenn ein Test erwartet, dass HAL einen Hardware-Interlock automatisch zurücksetzt, ist der Test falsch.
-
 → Siehe CHARTER §SR-05.
 
 ### §11.13 Keine Zonen-Lock-Eigenvergabe
 
 Wenn ein Test erwartet, dass HAL Zonen-Locks eigenmächtig vergibt, ist der Test falsch.
-
 → Siehe CHARTER §SR-06.
 
 ### §11.14 Keine Prozess-Fortsetzung ohne Resume-Token
@@ -924,6 +1000,21 @@ Wenn ein Test erwartet, dass HAL einen Prozess ohne gültigen Resume-Token forts
 ### §11.15 Keine Stage-Release ohne Berechtigung
 
 Wenn ein Test erwartet, dass HAL eine Stage ohne Berechtigung freigibt, ist der Test falsch.
+
+### §11.16 Keine Atlas-Hybrid-Frontier ohne Evidenz
+
+Wenn ein Test erwartet, dass die FrontierEngine Kanten ohne `evidence_refs` erzeugt, ist der Test falsch.
+→ Siehe GREMIUM §6.3.
+
+### §11.17 Kein automatischer Decay bei SafetyConstraint
+
+Wenn ein Test erwartet, dass ein SafetyConstraint nach Zeit automatisch abläuft, ist der Test falsch.
+→ Siehe GREMIUM §6.9.
+
+### §11.18 Keine Kristallisation aus Sandbox-Evidenz
+
+Wenn ein Test erwartet, dass `evidence_class = SANDBOX` einen physischen Kristall ohne physische Validierung erzeugt, ist der Test falsch.
+→ Siehe GREMIUM §6.7.
 
 ---
 
@@ -943,6 +1034,15 @@ Die Test-KI muss jeden Test wie folgt protokollieren:
 [QUESTOR-SICHERHEITSTEST Q-S-XX] [MODUL] [PROBLEM?] [BESTANDEN/NICHT BESTANDEN]
 [QUESTOR-PERFORMANCETEST Q-P-XX] [MODUL] [PROBLEM?] [BESTANDEN/NICHT BESTANDEN]
 [QUESTOR-STRESSTEST Q-T-XX] [MODUL] [PROBLEM?] [BESTANDEN/NICHT BESTANDEN]
+[ATLAS-TEST ATLAS-CTR-XX] [MODUL] [PROBLEM?] [BESTANDEN/NICHT BESTANDEN]
+[ATLAS-TEST ATLAS-SEM-XX] [MODUL] [PROBLEM?] [BESTANDEN/NICHT BESTANDEN]
+[ATLAS-TEST ATLAS-TOPO-XX] [MODUL] [PROBLEM?] [BESTANDEN/NICHT BESTANDEN]
+[ATLAS-TEST ATLAS-INT-XX] [MODUL] [PROBLEM?] [BESTANDEN/NICHT BESTANDEN]
+[ATLAS-TEST ATLAS-DIAG-XX] [MODUL] [PROBLEM?] [BESTANDEN/NICHT BESTANDEN]
+[ATLAS-TEST ATLAS-SAF-XX] [MODUL] [PROBLEM?] [BESTANDEN/NICHT BESTANDEN]
+[ATLAS-TEST ATLAS-FRNT-XX] [MODUL] [PROBLEM?] [BESTANDEN/NICHT BESTANDEN]
+[ATLAS-TEST ATLAS-TOP-XX] [MODUL] [PROBLEM?] [BESTANDEN/NICHT BESTANDEN]
+[ATLAS-TEST ATLAS-DOM-XX] [MODUL] [PROBLEM?] [BESTANDEN/NICHT BESTANDEN]
 ```
 
 Am Ende müssen die Gesamtsummen stehen:
@@ -959,7 +1059,17 @@ QUESTOR-KOMPONENTEN GESAMT: X/~44 BESTANDEN
 QUESTOR-SICHERHEIT GESAMT: X/~30 BESTANDEN
 QUESTOR-PERFORMANCE GESAMT: X/~10 BESTANDEN
 QUESTOR-STRESS GESAMT: X/~11 BESTANDEN
-GESAMT: X/~421 BESTANDEN
+ATLAS-CTR GESAMT: X/~15 BESTANDEN
+ATLAS-SEM GESAMT: X/~20 BESTANDEN
+ATLAS-TOPO GESAMT: X/~15 BESTANDEN
+ATLAS-INT GESAMT: X/~15 BESTANDEN
+ATLAS-DIAG GESAMT: X/~10 BESTANDEN
+ATLAS-SAF GESAMT: X/~10 BESTANDEN
+ATLAS-FRNT GESAMT: X/~15 BESTANDEN
+ATLAS-TOP GESAMT: X/~10 BESTANDEN
+ATLAS-DOM GESAMT: X/~10 BESTANDEN
+ATLAS GESAMT: X/~120 BESTANDEN
+GESAMT: X/~541 BESTANDEN
 ```
 
 ---
@@ -968,7 +1078,7 @@ GESAMT: X/~421 BESTANDEN
 
 Am Ende des Testlaufs muss die Test-KI einen Bericht in dieser Struktur liefern:
 
-```
+```markdown
 ## Testbericht — MYRMEX v2.4.0 + Questor v0.2.3 + HAL v0.2.0
 
 ### 1. Modus
@@ -981,6 +1091,7 @@ Am Ende des Testlaufs muss die Test-KI einen Bericht in dieser Struktur liefern:
 - HAL.md (specs/)
 - GREMIUM.md (specs/)
 - VALIDATION.md (ops/)
+- VALIDATION_ATLAS.md (ops/)
 - optional: produktives Repository
 
 ### 3. Ergebnisse
@@ -995,7 +1106,8 @@ QUESTOR-KOMPONENTEN GESAMT: X/~44 BESTANDEN
 QUESTOR-SICHERHEIT GESAMT: X/~30 BESTANDEN
 QUESTOR-PERFORMANCE GESAMT: X/~10 BESTANDEN
 QUESTOR-STRESS GESAMT: X/~11 BESTANDEN
-GESAMT: X/~421 BESTANDEN
+ATLAS GESAMT: X/~120 BESTANDEN
+GESAMT: X/~541 BESTANDEN
 
 ### 4. Blocker
 - [Blocker 1]
@@ -1057,10 +1169,34 @@ Ein nicht prüfbarer Test darf nicht stillschweigend als bestanden markiert werd
 ## §15 Dokumentenhierarchie
 
 Dieses Dokument steht in der Schicht `ops/` und referenziert:
+
 - `foundation/CHARTER.md` für Sicherheitsregeln (CHARTER §SR-XX)
 - `foundation/CONTRACTS.md` für Datenverträge (CONTRACTS §X.X)
 - `specs/QUESTOR.md` für Questor-spezifische Details
 - `specs/HAL.md` für HAL-spezifische Details
-- `specs/GREMIUM.md` für Gremium-spezifische Details
+- `specs/GREMIUM.md` für Gremium-spezifische Details (inkl. Atlas-Hybrid-System §6)
+- `ops/VALIDATION_ATLAS.md` für die vollständige Atlas-Hybrid-Test-Spezifikation
 
 **Regel:** Änderungen an Test-Suiten in diesem Dokument erfordern eine Versionsänderung und eine Überprüfung der referenzierten Dokumente.
+
+---
+
+## Anhang A: Akzeptanzprüfung für ATLAS-HYB-1.0.0
+
+Nach dem Einfügen dieser Änderungen sollte `VALIDATION.md` folgende Kriterien erfüllen:
+
+| # | Kriterium | Status |
+|---:|---|---|
+| 1 | Kopfzeile enthält Version `1.1.0-atlas-hyb.1` | ☐ |
+| 2 | `§0.1 Änderungsantrag ATLAS-HYB-1.0.0` ist vorhanden | ☐ |
+| 3 | `§2.2` enthält Atlas-Hybrid-Tests in der Verteilung | ☐ |
+| 4 | `§2.3` enthält Suite ATLAS in der Übersicht | ☐ |
+| 5 | `§4.6` definiert die Atlas-Test-Bereiche | ☐ |
+| 6 | `§8.1` enthält Atlas-Phase in der Ausführungsreihenfolge | ☐ |
+| 7 | `§8.2` enthält GATE-ATLAS | ☐ |
+| 8 | `§9` enthält Atlas-spezifische Akzeptanzkriterien (31–40) | ☐ |
+| 9 | `§12` enthält Atlas-Protokollformat | ☐ |
+| 10 | Gesamtzahl ist ~541 Tests | ☐ |
+| 11 | Keine neuen Sicherheitsregeln wurden definiert | ☐ |
+| 12 | CHARTER-Hierarchie bleibt gewahrt | ☐ |
+| 13 | Referenz auf `ops/VALIDATION_ATLAS.md` ist vorhanden | ☐ |

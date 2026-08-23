@@ -1,15 +1,13 @@
 # 🔌 HAL — HARDWARE ABSTRACTION LAYER
 
 | Feld | Wert |
-| :--- | :--- |
-| **Dateiname** | `specs/HAL.md` |
-| **Version** | 1.0.0 (New Architecture) |
-| **Status** | **BINDEND** — HAL-Spezifikation |
-| **System** | MYRMEX v2.4.0 + Questor v0.2.3 + HAL v0.2.0 |
-| **Schicht** | Layer 1 (specs/) — referenziert foundation/ |
-| **Datum** | 21. August 2026 |
-
----
+| --- | --- |
+| Dateiname | `specs/HAL.md` |
+| Version | `1.1.0-atlas-hyb.1` |
+| Status | `KOMPATIBILITÄTSBESTÄTIGUNG ATLAS-HYB-1.0.0 — keine funktionalen Änderungen` |
+| System | `MYRMEX v2.4.0 + Questor v0.2.3 + HAL v0.2.0` |
+| Schicht | `Layer 1 (specs/) — referenziert foundation/` |
+| Datum | `21. August 2026` |
 
 ## 0. Geltung und Änderungsregeln
 
@@ -19,6 +17,29 @@ Dieses Dokument definiert die vollständige HAL-Spezifikation.
 Es definiert keine neuen Verträge und keine neuen Sicherheitsregeln.
 
 **Konfliktregel:** Bei Widersprüchen gilt `CHARTER.md` > `CONTRACTS.md` > dieses Dokument.
+
+## §0.1 Änderungsantrag ATLAS-HYB-1.0.0 — HAL-Kompatibilitätsbestätigung
+
+Dieser Änderungsantrag bestätigt die Kompatibilität von HAL mit dem Atlas-Hybrid-System.
+
+**HAL erfordert keine funktionalen Änderungen durch das Atlas-Hybrid-System.**
+
+Begründung:
+
+1. Das Atlas-Hybrid-System ist eine Erweiterung des Gremiums (Schicht 4) und des Atlas.
+2. HAL ist Schicht 1 und interpretiert keine wissenschaftlichen Ziele (→ CHARTER §SR-08).
+3. HAL schreibt nicht in den Atlas (→ CHARTER §SR-04).
+4. HAL schreibt nicht in das Archiv (→ CHARTER §SR-04).
+5. Die Atlas-Hybrid-Felder (`atlas_expectation_ref`, `objective_family_ref`, `frontier_candidate_ref`, `evidence_kind`, `evidence_class` usw.) existieren ausschließlich auf der Paket- und Gremium-Ebene.
+6. Diese Felder werden von der HAL-Bridge (→ specs/QUESTOR.md §8) **nicht** in `HALCommand.parameters` oder `ProcessCommand.parameters` übersetzt.
+
+Regeln:
+
+- Dieser Änderungsantrag definiert keine neuen Verträge.
+- Dieser Änderungsantrag definiert keine neuen Sicherheitsregeln.
+- Dieser Änderungsantrag fügt keine neuen HAL-Funktionen hinzu.
+- Die bestehende HAL-Schnittstelle (16 Funktionen) bleibt unverändert.
+- Die bestehende Fehlerklassentrennung (OPERATIONAL / SAFETY) bleibt unverändert.
 
 ---
 
@@ -30,43 +51,43 @@ HAL ist Schicht 1 im MYRMEX-System (→ CHARTER §1.1).
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
- │                        QUESTOR (Schicht 2)                       │
- │  QuestCompass → PolicyEvaluator → HAL-Bridge                    │
- └───────────────────────────────┬─────────────────────────────────┘
-                                 │ HALCommand / ProcessCommand
-                                 ▼
+│                        QUESTOR (Schicht 2)                       │
+│  QuestCompass → PolicyEvaluator → HAL-Bridge                    │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │ HALCommand / ProcessCommand
+                                ▼
 ┌─────────────────────────────────────────────────────────────────┐
- │                     HAL INTERFACE (Schicht 1)                    │
- │  get_environment_manifest() · execute_command() · ...           │
- │  Slot State Store · Zone Lock Manager · ESTOP Handler           │
- └───────────────────────────────┬─────────────────────────────────┘
-                                 │ DeviceCommand
-                                 ▼
+│                     HAL INTERFACE (Schicht 1)                    │
+│  get_environment_manifest() · execute_command() · ...           │
+│  Slot State Store · Zone Lock Manager · ESTOP Handler           │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │ DeviceCommand
+                                ▼
 ┌─────────────────────────────────────────────────────────────────┐
- │              DEVICE ADAPTER / COMPUTE ADAPTER / DUMMY            │
- └───────────────────────────────┬─────────────────────────────────┘
-                                 │
-                                 ▼
+│              DEVICE ADAPTER / COMPUTE ADAPTER / DUMMY            │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │
+                                ▼
 ┌─────────────────────────────────────────────────────────────────┐
- │                   PHYSIS / COMPUTE (Schicht 0)                  │
- └─────────────────────────────────────────────────────────────────┘
+│                   PHYSIS / COMPUTE (Schicht 0)                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ### §1.2 Die sechs HAL-Grundprinzipien
 
 | # | Prinzip | Bedeutung | CHARTER-Referenz |
-| :--- | :--- | :--- | :--- |
-| 1 | **Dünne Schicht** | HAL bleibt bewusst dünn. Intelligenz bleibt bei Gremium, Questor und Resource Governor. | — |
-| 2 | **Deterministisch vor LLM** | HAL enthält keine LLM-Logik. Alle HAL-Entscheidungen sind deterministisch. | CHARTER §2 |
-| 3 | **Fail-Closed** | Wenn ein Zustand nicht sicher bestimmt werden kann: kein Kommando ausführen, keinen Slot freigeben, keine Lease akzeptieren. | CHARTER §SR-10 |
-| 4 | **Keine wissenschaftliche Interpretation** | HAL erhält keine Forschungsziele. HAL meldet keine wissenschaftlichen Kategorien. | CHARTER §SR-08 |
-| 5 | **Keine Lease-Vergabe** | HAL vergibt keine Leases. Leases kommen ausschließlich vom Resource Governor. | CHARTER §SR-06 |
-| 6 | **Keine Blackbox-Übergabe** | HAL gibt keine Blackbox-Inhalte an das Gremium weiter. | CHARTER §SR-07 |
+| --- | --- | --- | --- |
+| 1 | Dünne Schicht | HAL bleibt bewusst dünn. Intelligenz bleibt bei Gremium, Questor und Resource Governor. | — |
+| 2 | Deterministisch vor LLM | HAL enthält keine LLM-Logik. Alle HAL-Entscheidungen sind deterministisch. | CHARTER §2 |
+| 3 | Fail-Closed | Wenn ein Zustand nicht sicher bestimmt werden kann: kein Kommando ausführen, keinen Slot freigeben, keine Lease akzeptieren. | CHARTER §SR-10 |
+| 4 | Keine wissenschaftliche Interpretation | HAL erhält keine Forschungsziele. HAL meldet keine wissenschaftlichen Kategorien. | CHARTER §SR-08 |
+| 5 | Keine Lease-Vergabe | HAL vergibt keine Leases. Leases kommen ausschließlich vom Resource Governor. | CHARTER §SR-06 |
+| 6 | Keine Blackbox-Übergabe | HAL gibt keine Blackbox-Inhalte an das Gremium weiter. | CHARTER §SR-07 |
 
 ### §1.3 Was HAL DARF
 
 | Erlaubt | Begründung |
-| :--- | :--- |
+| --- | --- |
 | Hardware- oder Compute-Kommandos ausführen | Kernaufgabe |
 | Slot-Zustände melden | Zustandsprüfung |
 | Lease-Referenzen formal prüfen oder durch den Resource Governor prüfen lassen | Lease-Validierung |
@@ -84,7 +105,7 @@ HAL ist Schicht 1 im MYRMEX-System (→ CHARTER §1.1).
 ### §1.4 Was HAL NICHT DARF
 
 | Verboten | CHARTER-Referenz |
-| :--- | :--- |
+| --- | --- |
 | Leases vergeben | CHARTER §SR-06 |
 | Leases verlängern | CHARTER §SR-06 |
 | Leases eigenmächtig erneuern | CHARTER §SR-06 |
@@ -101,6 +122,11 @@ HAL ist Schicht 1 im MYRMEX-System (→ CHARTER §1.1).
 | Finale Sicherheitsfreigaben erteilen | CHARTER §SR-13 |
 | LLM-Entscheidungen als sicherheitskritische Endentscheidung nutzen | CHARTER §SR-13 |
 | Zonen-Locks eigenmächtig vergeben | CHARTER §SR-06 |
+| Atlas-Hybrid-Felder in HALCommand.parameters schreiben | CHARTER §SR-04, §SR-08 |
+| Atlas-Hybrid-Felder in ProcessCommand.parameters schreiben | CHARTER §SR-04, §SR-08 |
+| expectation_ref, frontier_candidate_ref oder evidence_kind interpretieren | CHARTER §SR-08 |
+| FrontierCandidates oder ResearchTopics verarbeiten | CHARTER §SR-04 |
+| DiagnosticResolution oder SafetyConstraint auflösen | CHARTER §SR-05 |
 
 ---
 
@@ -114,7 +140,8 @@ Der zentrale Vertragsendpunkt. Bietet die 16 Funktionen aus → CONTRACTS §3.12
 
 Der Device Adapter ist die geräte- oder compute-spezifische Umsetzung.
 
-Mögliche Adapter:
+**Mögliche Adapter:**
+
 - `DummyAdapter`
 - `SimulationAdapter`
 - `ComputeAdapter`
@@ -126,6 +153,7 @@ Mögliche Adapter:
 - `GPUClusterAdapter`
 
 **Regeln:**
+
 - Der Adapter darf keine Lease vergeben (→ CHARTER §SR-06).
 - Der Adapter darf keine Sicherheitsregeln umgehen.
 
@@ -141,6 +169,7 @@ HAL darf Slot-Zustände technisch führen, aber Lease-Gültigkeit nicht eigenmä
 Verwaltet Langzeit-Prozess-Zustände (→ CONTRACTS §3.9).
 
 Für jedes aktive Gerät oder Compute-Job wird ein Prozesszustand geführt:
+
 - `process_id`
 - `device_job_id`
 - `process_state`
@@ -152,7 +181,8 @@ Für jedes aktive Gerät oder Compute-Job wird ein Prozesszustand geführt:
 
 Verwaltet zonenbasierte Mutex-Locks (→ CONTRACTS §3.8).
 
-Zonen können sein:
+**Zonen können sein:**
+
 - Gemeinsame Schienen
 - Kinematische Kollisionsräume
 - Plattenpositionen
@@ -164,6 +194,7 @@ HAL verwaltet Zonen-Locks nicht eigenmächtig (→ CHARTER §SR-06).
 ### §2.6 ESTOP Handler
 
 Verwaltet:
+
 - ESTOP-Ereignisse
 - ESTOP-Zustände
 - Hardware-Interlock-Ereignisse
@@ -187,32 +218,32 @@ Schreibt HAL-Ereignisse nach `data/operational_logs/`.
 → Siehe CONTRACTS §7.2 für die vollständige Zustandsmaschine.
 
 | Zustand | Bedeutung |
-| :--- | :--- |
-| `FREE` | Slot verfügbar |
-| `RESERVED` | Slot reserviert |
-| `ACTIVE` | Slot aktiv |
-| `ERROR` | Fehlerzustand |
-| `ESTOP_SUSPENDED` | ESTOP aktiv |
-| `INTERLOCKED` | Hardware-Interlock aktiv |
-| `MAINTENANCE` | Wartung |
-| `OFFLINE` | Nicht erreichbar |
+| --- | --- |
+| FREE | Slot verfügbar |
+| RESERVED | Slot reserviert |
+| ACTIVE | Slot aktiv |
+| ERROR | Fehlerzustand |
+| ESTOP_SUSPENDED | ESTOP aktiv |
+| INTERLOCKED | Hardware-Interlock aktiv |
+| MAINTENANCE | Wartung |
+| OFFLINE | Nicht erreichbar |
 
 ### §3.2 Übergangstabelle
 
 | Von | Nach | Auslöser |
-| :--- | :--- | :--- |
-| `FREE` | `RESERVED` | Gültige Lease-Reservierung |
-| `RESERVED` | `ACTIVE` | Kommando akzeptiert |
-| `ACTIVE` | `FREE` | Erfolgreiche Ausführung und Freigabe |
-| `ACTIVE` | `ERROR` | Fehler oder unklarer Zustand |
-| `ACTIVE` | `ESTOP_SUSPENDED` | ESTOP |
-| `ACTIVE` | `INTERLOCKED` | Hardware-Interlock |
-| `RESERVED` | `FREE` | Lease abgelaufen oder widerrufen |
-| `ERROR` | `FREE` | Erfolgreiche Reconciliation |
-| `ESTOP_SUSPENDED` | `FREE` | ESTOP zurückgesetzt und Lease gültig |
-| `INTERLOCKED` | `FREE` | Hardware-Interlock zurückgesetzt, safe_state_verified, manuelle Bestätigung |
-| `MAINTENANCE` | `OFFLINE` | Wartung beendet oder Gerät getrennt |
-| `OFFLINE` | `FREE` | Gerät wieder verfügbar und geprüft |
+| --- | --- | --- |
+| FREE | RESERVED | Gültige Lease-Reservierung |
+| RESERVED | ACTIVE | Kommando akzeptiert |
+| ACTIVE | FREE | Erfolgreiche Ausführung und Freigabe |
+| ACTIVE | ERROR | Fehler oder unklarer Zustand |
+| ACTIVE | ESTOP_SUSPENDED | ESTOP |
+| ACTIVE | INTERLOCKED | Hardware-Interlock |
+| RESERVED | FREE | Lease abgelaufen oder widerrufen |
+| ERROR | FREE | Erfolgreiche Reconciliation |
+| ESTOP_SUSPENDED | FREE | ESTOP zurückgesetzt und Lease gültig |
+| INTERLOCKED | FREE | Hardware-Interlock zurückgesetzt, safe_state_verified, manuelle Bestätigung |
+| MAINTENANCE | OFFLINE | Wartung beendet oder Gerät getrennt |
+| OFFLINE | FREE | Gerät wieder verfügbar und geprüft |
 
 ### §3.3 Harte Regel für `INTERLOCKED`
 
@@ -231,6 +262,7 @@ Schreibt HAL-Ereignisse nach `data/operational_logs/`.
 ### §4.1 Zweck
 
 Die zonenbasierte Mutex-Modellierung dient dazu, gemeinsame physische Räume zu schützen:
+
 - Gemeinsame Schienen
 - Fahrwege
 - Kinematische Kollisionsräume
@@ -246,19 +278,19 @@ HAL fragt Zonen-Locks beim Resource Governor an.
 ### §4.3 Zonen-Lock-Antwort
 
 | Status | Bedeutung |
-| :--- | :--- |
-| `GRANTED` | Zonen-Lock gewährt |
-| `DENIED` | Zonen-Lock abgelehnt |
-| `TIMEOUT` | Zonen-Lock-Anfrage hat zu lange gedauert |
+| --- | --- |
+| GRANTED | Zonen-Lock gewährt |
+| DENIED | Zonen-Lock abgelehnt |
+| TIMEOUT | Zonen-Lock-Anfrage hat zu lange gedauert |
 
 ### §4.4 Fehlercodes
 
 | Fehler | Bedeutung | Fehlerklasse |
-| :--- | :--- | :--- |
-| `ZONE_LOCK_UNAVAILABLE` | Zonen-Lock ist nicht verfügbar | OPERATIONAL |
-| `ZONE_LOCK_TIMEOUT` | Zonen-Lock-Anfrage hat zu lange gedauert | OPERATIONAL |
-| `ZONE_LOCK_DENIED` | Zonen-Lock wurde abgelehnt | OPERATIONAL |
-| `ZONE_LOCK_EXPIRED` | Zonen-Lock ist abgelaufen | OPERATIONAL |
+| --- | --- | --- |
+| ZONE_LOCK_UNAVAILABLE | Zonen-Lock ist nicht verfügbar | OPERATIONAL |
+| ZONE_LOCK_TIMEOUT | Zonen-Lock-Anfrage hat zu lange gedauert | OPERATIONAL |
+| ZONE_LOCK_DENIED | Zonen-Lock wurde abgelehnt | OPERATIONAL |
+| ZONE_LOCK_EXPIRED | Zonen-Lock ist abgelaufen | OPERATIONAL |
 
 → Siehe CHARTER §SR-08 für die Operational/Scientific-Trennung.
 
@@ -268,7 +300,8 @@ HAL fragt Zonen-Locks beim Resource Governor an.
 
 ### §5.1 Auslösung
 
-ESTOP darf ausgelöst werden durch:
+**ESTOP darf ausgelöst werden durch:**
+
 - Physische Gefahr
 - Sicherheitsgrenzwertverletzung
 - Hardware-Interlock
@@ -276,7 +309,8 @@ ESTOP darf ausgelöst werden durch:
 - Manuelle Sicherheitsauslösung
 - Testauslösung im TEST-Modus
 
-ESTOP darf **nicht** ausgelöst werden durch:
+**ESTOP darf nicht ausgelöst werden durch:**
+
 - Ressourcenkonflikt (→ CHARTER §SR-09)
 - Lease-Konflikt (→ CHARTER §SR-09)
 - Timeout ohne Sicherheitsbezug
@@ -287,15 +321,15 @@ ESTOP darf **nicht** ausgelöst werden durch:
 ### §5.2 Hardware-Interlock vs Software-ESTOP
 
 | Merkmal | Software-ESTOP | Hardware-Interlock |
-| :--- | :--- | :--- |
-| `origin` | `SOFTWARE` | `HARDWARE_INTERLOCK` |
+| --- | --- | --- |
+| origin | SOFTWARE | HARDWARE_INTERLOCK |
 | Auslösung | Software entscheidet | Hardware zieht Stecker |
 | Kommunikation | HAL kann antworten | HAL kann nicht antworten |
 | Reset | Software-Reset möglich | Physischer Reset erforderlich |
-| `physical_reset_required` | `false` | `true` |
-| `device_reachable` | `true` | oft `false` |
-| `safe_state_verified` | oft `true` | oft `false` |
-| `inspection_required` | `false` | oft `true` |
+| physical_reset_required | false | true |
+| device_reachable | true | oft `false` |
+| safe_state_verified | oft `true` | oft `false` |
+| inspection_required | false | oft `true` |
 
 → Siehe CONTRACTS §3.10 für den EstopState-Vertrag.
 → Siehe CONTRACTS §3.11 für den HardwareInterlockEvent-Vertrag.
@@ -303,31 +337,35 @@ ESTOP darf **nicht** ausgelöst werden durch:
 ### §5.3 Wirkung
 
 Bei `ACTIVE` oder `LATCHED`:
-1. Keine neuen Kommandos ausführen
-2. Aktive Kommandos kontrolliert stoppen
-3. Betroffene Slots auf `ESTOP_SUSPENDED` oder `INTERLOCKED`
-4. Betroffene Zonen auf `ESTOP_SUSPENDED` oder `INTERLOCKED`
-5. Betroffene Leases dem Resource Governor als suspendiert melden
-6. Questor erhält Sicherheitsabbruch
-7. Audit-Log wird geschrieben
+
+- Keine neuen Kommandos ausführen
+- Aktive Kommandos kontrolliert stoppen
+- Betroffene Slots auf `ESTOP_SUSPENDED` oder `INTERLOCKED`
+- Betroffene Zonen auf `ESTOP_SUSPENDED` oder `INTERLOCKED`
+- Betroffene Leases dem Resource Governor als suspendiert melden
+- Questor erhält Sicherheitsabbruch
+- Audit-Log wird geschrieben
 
 → Siehe CHARTER §SR-09 für die ESTOP-Regel.
 
 ### §5.4 Rücksetzung
 
-ESTOP darf **nicht** zurückgesetzt werden durch:
+**ESTOP darf nicht zurückgesetzt werden durch:**
+
 - Questor (→ CHARTER §SR-05)
 - LLM (→ CHARTER §SR-13)
 - Automatischen Retry
 - Device Adapter
 
-ESTOP darf zurückgesetzt werden durch:
+**ESTOP darf zurückgesetzt werden durch:**
+
 - Autorisierten Sicherheitsprozess
 - Menschliche Freigabe
 - Definierten Audit-Prozess
 - Optional Kanzler-/Sicherheitsfreigabe, falls konfiguriert
 
-Für Hardware-Interlocks gilt zusätzlich:
+**Für Hardware-Interlocks gilt zusätzlich:**
+
 - `physical_reset_required` muss erfüllt sein
 - `safe_state_verified` muss `true` sein
 - `inspection_required` muss erfüllt sein
@@ -338,11 +376,11 @@ Für Hardware-Interlocks gilt zusätzlich:
 → Siehe CONTRACTS §7.5 für die vollständige Zustandsmaschine.
 
 | Zustand | Bedeutung |
-| :--- | :--- |
-| `NORMAL` | Kein aktiver ESTOP |
-| `ACTIVE` | ESTOP ausgelöst, Ausführung gestoppt |
-| `LATCHED` | ESTOP bleibt aktiv bis manueller Quittierung |
-| `TEST` | ESTOP-Testmodus ohne echte physische Auslösung |
+| --- | --- |
+| NORMAL | Kein aktiver ESTOP |
+| ACTIVE | ESTOP ausgelöst, Ausführung gestoppt |
+| LATCHED | ESTOP bleibt aktiv bis manueller Quittierung |
+| TEST | ESTOP-Testmodus ohne echte physische Auslösung |
 
 ---
 
@@ -352,7 +390,8 @@ Für Hardware-Interlocks gilt zusätzlich:
 
 Das Langzeit-Prozessmodell dient dazu, geräteautonome Prozesse zu verwalten, die länger dauern als ein einzelner RPC-Aufruf.
 
-Beispiele:
+**Beispiele:**
+
 - 72-Stunden-Inkubation
 - Lange Temperprozesse
 - Lange Materialtests
@@ -374,38 +413,38 @@ Diese sind **STRIKT** getrennt.
 ### §6.3 Prozess-Modi
 
 | Modus | Bedeutung |
-| :--- | :--- |
-| `START` | Prozess starten |
-| `MONITOR` | Prozess überwachen |
-| `RESUME` | Prozess fortsetzen |
-| `HOLD` | Prozess anhalten |
-| `ABORT` | Prozess abbrechen |
-| `RELEASE_STAGE` | Nächste Stufe freigeben |
+| --- | --- |
+| START | Prozess starten |
+| MONITOR | Prozess überwachen |
+| RESUME | Prozess fortsetzen |
+| HOLD | Prozess anhalten |
+| ABORT | Prozess abbrechen |
+| RELEASE_STAGE | Nächste Stufe freigeben |
 
 ### §6.4 Prozess-Zustandsmaschine
 
 → Siehe CONTRACTS §7.3 für die vollständige Zustandsmaschine.
 
 | Zustand | Bedeutung |
-| :--- | :--- |
-| `PENDING` | Prozess wartet |
-| `RUNNING` | Prozess läuft |
-| `PAUSED` | Prozess pausiert |
-| `SAFE_HOLD` | Prozess sicher angehalten |
-| `WAITING_FOR_RELEASE` | Wartet auf manuelle Freigabe |
-| `COMPLETED` | Erfolgreich abgeschlossen |
-| `ABORTED` | Abgebrochen |
-| `FAULT` | Fehler |
-| `UNKNOWN` | Zustand unklar (nach Crash) |
+| --- | --- |
+| PENDING | Prozess wartet |
+| RUNNING | Prozess läuft |
+| PAUSED | Prozess pausiert |
+| SAFE_HOLD | Prozess sicher angehalten |
+| WAITING_FOR_RELEASE | Wartet auf manuelle Freigabe |
+| COMPLETED | Erfolgreich abgeschlossen |
+| ABORTED | Abgebrochen |
+| FAULT | Fehler |
+| UNKNOWN | Zustand unklar (nach Crash) |
 
 ### §6.5 Lease-Expiry-Policy
 
 | Policy | Bedeutung |
-| :--- | :--- |
-| `SAFE_HOLD` | Prozess sicher anhalten, aber nicht zerstören |
-| `ABORT_TO_SAFE_STATE` | Prozess in sicheren Zustand abbrechen |
-| `CONTINUE_PASSIVE_SAFE` | Prozess passiv weiterlaufen lassen (z.B. Inkubator hält Temperatur) |
-| `REQUIRES_RECONCILE` | Zustand muss geklärt werden |
+| --- | --- |
+| SAFE_HOLD | Prozess sicher anhalten, aber nicht zerstören |
+| ABORT_TO_SAFE_STATE | Prozess in sicheren Zustand abbrechen |
+| CONTINUE_PASSIVE_SAFE | Prozess passiv weiterlaufen lassen (z.B. Inkubator hält Temperatur) |
+| REQUIRES_RECONCILE | Zustand muss geklärt werden |
 
 ### §6.6 Stage-Release-Policy
 
@@ -414,6 +453,7 @@ Für mehrstufige Prozesse mit sicherheitskritischen Stufen:
 → Siehe CONTRACTS §4.5 für den StageReleasePolicy-Vertrag.
 
 **Beispiel:**
+
 ```yaml
 stages:
   - stage_id: incubation_72h
@@ -430,6 +470,7 @@ stages:
 Für idempotentes Fortsetzen nach Restart:
 
 **Regeln:**
+
 - `resume_token` wird bei jedem Zustandswechsel aktualisiert
 - `resume_token` ist erforderlich für `RESUME`
 - Wenn `resume_token` ungültig ist: `RECOVERY_UNSAFE`
@@ -445,26 +486,26 @@ Das Compute-Ressourcenmodell unterscheidet Labor-Aktuatorik von Compute-Ressourc
 ### §7.2 Resource-Class
 
 | Klasse | Bedeutung |
-| :--- | :--- |
-| `LAB_ACTUATOR` | Physischer Laboraktuator (Roboterarm, Pipettierroboter, Inkubator) |
-| `COMPUTE_NODE` | Compute-Ressource (GPU-Cluster, CPU-Node) |
-| `SIMULATION_ENVIRONMENT` | Simulationsumgebung |
-| `SANDBOX_ENVIRONMENT` | Sandbox-Umgebung |
-| `HYBRID_SLOT` | Kombination aus Labor und Compute |
+| --- | --- |
+| LAB_ACTUATOR | Physischer Laboraktuator (Roboterarm, Pipettierroboter, Inkubator) |
+| COMPUTE_NODE | Compute-Ressource (GPU-Cluster, CPU-Node) |
+| SIMULATION_ENVIRONMENT | Simulationsumgebung |
+| SANDBOX_ENVIRONMENT | Sandbox-Umgebung |
+| HYBRID_SLOT | Kombination aus Labor und Compute |
 
 → Siehe CONTRACTS §3.2 für den SlotDescriptor-Vertrag.
 
 ### §7.3 Compute-spezifische Fehlercodes
 
 | Fehler | Bedeutung | Fehlerklasse |
-| :--- | :--- | :--- |
-| `COMPUTE_OOM` | Host-RAM-OOM | OPERATIONAL |
-| `CUDA_OOM` | GPU-Speicher-OOM | OPERATIONAL |
-| `GPU_LOST` | GPU nicht erreichbar | OPERATIONAL |
-| `SCHEDULER_REJECTED` | Scheduler hat Job abgelehnt | OPERATIONAL |
-| `NODE_UNAVAILABLE` | Node nicht erreichbar | OPERATIONAL |
-| `CONTAINER_OOM_KILLED` | Container wurde wegen OOM getötet | OPERATIONAL |
-| `CONTAINER_CRASHED` | Container ist abgestürzt | OPERATIONAL |
+| --- | --- | --- |
+| COMPUTE_OOM | Host-RAM-OOM | OPERATIONAL |
+| CUDA_OOM | GPU-Speicher-OOM | OPERATIONAL |
+| GPU_LOST | GPU nicht erreichbar | OPERATIONAL |
+| SCHEDULER_REJECTED | Scheduler hat Job abgelehnt | OPERATIONAL |
+| NODE_UNAVAILABLE | Node nicht erreichbar | OPERATIONAL |
+| CONTAINER_OOM_KILLED | Container wurde wegen OOM getötet | OPERATIONAL |
+| CONTAINER_CRASHED | Container ist abgestürzt | OPERATIONAL |
 
 → Siehe CHARTER §SR-08 für die Operational/Scientific-Trennung.
 
@@ -494,16 +535,16 @@ Die Parameter-Schema-Registry dient dazu, komplexe Geräteprofile sicher zu vali
 → Siehe CONTRACTS §3.3 und §3.4 für die HALCommand- und ProcessCommand-Verträge.
 
 | Feld | Bedeutung |
-| :--- | :--- |
-| `parameter_schema_ref` | Referenz auf das Schema der Parameter |
-| `parameter_schema_version` | Version des Schemas |
-| `parameter_checksum` | Prüfsumme der Parameter |
-| `payload_artifact_ref` | Referenz auf ein externes Artifact |
+| --- | --- |
+| parameter_schema_ref | Referenz auf das Schema der Parameter |
+| parameter_schema_version | Version des Schemas |
+| parameter_checksum | Prüfsumme der Parameter |
+| payload_artifact_ref | Referenz auf ein externes Artifact |
 
 ### §8.3 Regeln
 
 | Regel | Bedeutung |
-| :--- | :--- |
+| --- | --- |
 | Wenn eine Capability komplexe Profile erwartet, muss `parameter_schema_ref` gesetzt sein. | Schema-Pflicht |
 | Wenn `parameter_schema_ref` gesetzt ist, muss `parameter_checksum` gesetzt sein. | Checksum-Pflicht |
 | Wenn Schema unbekannt oder Checksumme falsch: `PARAMETER_INVALID`. | Fail-Closed |
@@ -513,10 +554,10 @@ Die Parameter-Schema-Registry dient dazu, komplexe Geräteprofile sicher zu vali
 ### §8.4 Fehlercodes
 
 | Fehler | Bedeutung | Fehlerklasse |
-| :--- | :--- | :--- |
-| `PARAMETER_SCHEMA_UNKNOWN` | Schema ist unbekannt | OPERATIONAL |
-| `PARAMETER_CHECKSUM_MISMATCH` | Checksumme stimmt nicht | OPERATIONAL |
-| `PARAMETER_INVALID` | Parameter ist ungültig | OPERATIONAL |
+| --- | --- | --- |
+| PARAMETER_SCHEMA_UNKNOWN | Schema ist unbekannt | OPERATIONAL |
+| PARAMETER_CHECKSUM_MISMATCH | Checksumme stimmt nicht | OPERATIONAL |
+| PARAMETER_INVALID | Parameter ist ungültig | OPERATIONAL |
 
 ---
 
@@ -527,23 +568,23 @@ Die Parameter-Schema-Registry dient dazu, komplexe Geräteprofile sicher zu vali
 Die folgenden 16 Funktionen sind verbindlich:
 
 | # | Funktion | Zweck |
-| :--- | :--- | :--- |
-| 1 | `get_environment_manifest()` | Umgebungsinformationen abrufen |
-| 2 | `get_slot_state(slot_id)` | Slot-Zustand abrufen |
-| 3 | `get_zone_state(zone_id)` | Zonen-Zustand abrufen |
-| 4 | `execute_command(command)` | Kommando ausführen |
-| 5 | `start_process(process_command)` | Langzeit-Prozess starten |
-| 6 | `monitor_process(process_id)` | Prozess überwachen |
-| 7 | `hold_process(process_id)` | Prozess anhalten |
-| 8 | `resume_process(process_id, resume_token)` | Prozess fortsetzen |
-| 9 | `abort_process(process_id)` | Prozess abbrechen |
-| 10 | `release_stage(process_id, stage_id, release_authority)` | Stufe freigeben |
-| 11 | `report_estop(reason, trigger_source)` | ESTOP melden |
-| 12 | `report_hardware_interlock(interlock_event)` | Hardware-Interlock melden |
-| 13 | `get_estop_state()` | ESTOP-Zustand abrufen |
-| 14 | `reconcile_slot_state(slot_id)` | Slot-Zustand nach Crash klären |
-| 15 | `reconcile_process_state(process_id)` | Prozess-Zustand nach Crash klären |
-| 16 | `get_command_status(command_id)` | Kommando-Status abrufen |
+| --- | --- | --- |
+| 1 | get_environment_manifest() | Umgebungsinformationen abrufen |
+| 2 | get_slot_state(slot_id) | Slot-Zustand abrufen |
+| 3 | get_zone_state(zone_id) | Zonen-Zustand abrufen |
+| 4 | execute_command(command) | Kommando ausführen |
+| 5 | start_process(process_command) | Langzeit-Prozess starten |
+| 6 | monitor_process(process_id) | Prozess überwachen |
+| 7 | hold_process(process_id) | Prozess anhalten |
+| 8 | resume_process(process_id, resume_token) | Prozess fortsetzen |
+| 9 | abort_process(process_id) | Prozess abbrechen |
+| 10 | release_stage(process_id, stage_id, release_authority) | Stufe freigeben |
+| 11 | report_estop(reason, trigger_source) | ESTOP melden |
+| 12 | report_hardware_interlock(interlock_event) | Hardware-Interlock melden |
+| 13 | get_estop_state() | ESTOP-Zustand abrufen |
+| 14 | reconcile_slot_state(slot_id) | Slot-Zustand nach Crash klären |
+| 15 | reconcile_process_state(process_id) | Prozess-Zustand nach Crash klären |
+| 16 | get_command_status(command_id) | Kommando-Status abrufen |
 
 ---
 
@@ -555,11 +596,11 @@ Die folgenden 16 Funktionen sind verbindlich:
 → Siehe CHARTER §SR-08 für die Operational/Scientific-Trennung.
 
 | Klasse | Bedeutung | Wissenschaftliches Signal? |
-| :--- | :--- | :--- |
-| `OPERATIONAL` | Prozessfehler, Crash, Timeout, Lease-Problem | **Nein** |
-| `SAFETY` | Sicherheitsverletzung, ESTOP | Ja, mit Sicherheitsprüfung |
+| --- | --- | --- |
+| OPERATIONAL | Prozessfehler, Crash, Timeout, Lease-Problem | Nein |
+| SAFETY | Sicherheitsverletzung, ESTOP | Ja, mit Sicherheitsprüfung |
 
-HAL darf **keine** wissenschaftliche Fehlerklasse verwenden.
+**HAL darf keine wissenschaftliche Fehlerklasse verwenden.**
 
 ### §10.2 Operationale Fehler (HAL)
 
@@ -598,7 +639,7 @@ Alle diese Fehler sind `SAFETY`.
 ### §10.4 HAL-Fehlerregeln
 
 | Regel | Bedeutung | CHARTER-Referenz |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | HAL behandelt CUDA_OOM als OPERATIONAL, nicht als SAFETY | Compute-Fehler sind operational | CHARTER §SR-08 |
 | HAL behandelt LEASE_DENIED als OPERATIONAL, nicht als ESTOP | Ressourcenkonflikte sind operational | CHARTER §SR-09 |
 | HAL behandelt Hardware-Interlock als SAFETY | Hardware-Interlocks sind sicherheitsrelevant | CHARTER §SR-09 |
@@ -614,6 +655,7 @@ Alle diese Fehler sind `SAFETY`.
 Jedes Kommando hat `timeout_s` (→ CONTRACTS §3.3).
 
 **Regeln:**
+
 - `timeout_s` muss positiv sein
 - `timeout_s` darf `max_command_timeout_s` aus dem Manifest nicht überschreiten
 - Wenn `timeout_s` fehlt oder ungültig ist: `COMMAND_INVALID`
@@ -624,6 +666,7 @@ Jedes Kommando hat `timeout_s` (→ CONTRACTS §3.3).
 Jeder Prozess hat `expected_process_duration_s` (→ CONTRACTS §3.4).
 
 **Regeln:**
+
 - `expected_process_duration_s` muss positiv sein
 - `expected_process_duration_s` darf `max_process_duration_s` aus dem SlotDescriptor nicht überschreiten
 - Wenn `expected_process_duration_s` zu groß ist: `PROCESS_DURATION_EXCEEDS_LIMIT`
@@ -631,23 +674,25 @@ Jeder Prozess hat `expected_process_duration_s` (→ CONTRACTS §3.4).
 ### §11.3 Timeout bei Kommandos
 
 Bei Timeout:
-1. Kommando wird als `TIMEOUT` gemeldet
-2. Wenn der Slot physisch ist und der Zustand unklar bleibt:
-   - Slot auf `ERROR`
-   - `reconcile_slot_state` erforderlich
-   - **Kein blinder Retry**
-3. Fehlerklasse: `OPERATIONAL`
+
+- Kommando wird als `TIMEOUT` gemeldet
+- Wenn der Slot physisch ist und der Zustand unklar bleibt:
+  - Slot auf `ERROR`
+  - `reconcile_slot_state` erforderlich
+  - Kein blinder Retry
+- Fehlerklasse: `OPERATIONAL`
 
 ### §11.4 Timeout bei Prozessen
 
 Bei Prozess-Timeout:
-1. Prozess wird als `FAULT` gemeldet
-2. `on_lease_expiry_policy` wird angewendet
-3. Wenn `SAFE_HOLD`: Prozess wird sicher angehalten
-4. Wenn `ABORT_TO_SAFE_STATE`: Prozess wird in sicheren Zustand abgebrochen
-5. Wenn `CONTINUE_PASSIVE_SAFE`: Prozess läuft passiv weiter
-6. Wenn `REQUIRES_RECONCILE`: Zustand muss geklärt werden
-7. Fehlerklasse: `OPERATIONAL`
+
+- Prozess wird als `FAULT` gemeldet
+- `on_lease_expiry_policy` wird angewendet
+- Wenn `SAFE_HOLD`: Prozess wird sicher angehalten
+- Wenn `ABORT_TO_SAFE_STATE`: Prozess wird in sicheren Zustand abgebrochen
+- Wenn `CONTINUE_PASSIVE_SAFE`: Prozess läuft passiv weiter
+- Wenn `REQUIRES_RECONCILE`: Zustand muss geklärt werden
+- Fehlerklasse: `OPERATIONAL`
 
 ---
 
@@ -656,11 +701,12 @@ Bei Prozess-Timeout:
 ### §12.1 Grundsätze
 
 Nach einem Crash gilt:
-- **Kein automatischer Neustart von Kommandos**
-- **Kein automatischer Neustart von Prozessen**
-- **Kein blinder Retry**
-- **Keine automatische Slot-Freigabe bei unklarem Zustand**
-- **Keine automatische Zonen-Freigabe bei unklarem Zustand**
+
+- Kein automatischer Neustart von Kommandos
+- Kein automatischer Neustart von Prozessen
+- Kein blinder Retry
+- Keine automatische Slot-Freigabe bei unklarem Zustand
+- Keine automatische Zonen-Freigabe bei unklarem Zustand
 
 → Siehe CHARTER §SR-10 für die Fail-Closed-Regel.
 
@@ -676,7 +722,7 @@ Nach einem Crash gilt:
 ### §12.3 Recovery-Entscheidung
 
 | Zustand | Aktion |
-| :--- | :--- |
+| --- | --- |
 | Zustand eindeutig | Slot kann kontrolliert freigegeben oder weitergenutzt werden. Prozess kann kontrolliert fortgesetzt oder abgebrochen werden. |
 | Zustand unklar | Slot auf `ERROR`. Prozess auf `UNKNOWN`. Ergebnis: `RECOVERY_UNSAFE`. |
 
@@ -702,7 +748,7 @@ hal_process_idempotency_key = process_id:lease_ref:slot_id
 ### §13.3 Regeln
 
 | Regel | Bedeutung |
-| :--- | :--- |
+| --- | --- |
 | Ein bereits ausgeführtes Kommando darf nicht erneut ausgeführt werden. | Keine doppelte Ausführung |
 | Ein bereits gestarteter Prozess darf nicht erneut gestartet werden. | Keine doppelte Ausführung |
 | Ein blockiertes Duplikat darf keine Seiteneffekte erzeugen. | Keine doppelten Seiteneffekte |
@@ -758,7 +804,7 @@ data/operational_logs/
 ### §14.3 Verbotene Ziele
 
 | Verboten | CHARTER-Referenz |
-| :--- | :--- |
+| --- | --- |
 | Schreiben nach `data/archiv/` | CHARTER §SR-04 |
 | Schreiben nach `data/atlas/` | CHARTER §SR-04 |
 | Schreiben nach `data/questor_blackbox/` | CHARTER §SR-07 |
@@ -773,19 +819,20 @@ data/operational_logs/
 ### §15.1 Kommunikation
 
 Questor kommuniziert mit HAL über eine HAL-Bridge (→ specs/QUESTOR.md §8).
-
 Questor darf nicht direkt auf Hardware zugreifen (→ CHARTER §SR-12).
-
 Die HAL-Bridge übersetzt Questor-Intentionen in `HALCommand`- oder `ProcessCommand`-Objekte.
 
 ### §15.2 Regeln
 
 | Regel | CHARTER-Referenz |
-| :--- | :--- |
+| --- | --- |
 | Keine wissenschaftlichen Ziele in `HALCommand.parameters` | CHARTER §SR-08 |
 | Keine Atlas-Signale in `HALCommand.parameters` | CHARTER §SR-04 |
 | Keine Gate-Logik in HAL | — |
 | Keine Lease-Vergabe in Questor oder HAL | CHARTER §SR-06 |
+| Keine Atlas-Hybrid-Felder in HALCommand.parameters | CHARTER §SR-04, §SR-08 |
+| Keine Atlas-Hybrid-Felder in ProcessCommand.parameters | CHARTER §SR-04, §SR-08 |
+| HAL-Bridge übersetzt keine expectation_ref, frontier_candidate_ref oder evidence_kind | CHARTER §SR-08 |
 
 ### §15.3 Questor erhält von HAL
 
@@ -807,14 +854,16 @@ Questor meldet die Ergebnisse im `questor_ergebnis_paket` (→ CONTRACTS §2.1).
 
 Resource Governor ist für Leases zuständig.
 
-HAL darf:
+**HAL darf:**
+
 - Lease-Referenzen prüfen
 - Lease-Status anfragen
 - ESTOP-bedingte Lease-Suspendierung melden
 - Zonen-Locks anfragen
 - Zonen-Lock-Status anfragen
 
-HAL darf **nicht**:
+**HAL darf nicht:**
+
 - Leases erzeugen (→ CHARTER §SR-06)
 - Leases verlängern (→ CHARTER §SR-06)
 - Leases widerrufen (→ CHARTER §SR-06)
@@ -831,7 +880,6 @@ Pfad-Leases bleiben Aufgabe des Resource Governors.
 ### §16.3 Zonen-Locks
 
 Zonen-Locks werden vom Resource Governor verwaltet.
-
 HAL sieht normalerweise nur slotbezogene Lease-Referenzen.
 
 ---
@@ -843,20 +891,20 @@ HAL sieht normalerweise nur slotbezogene Lease-Referenzen.
 → Siehe CONTRACTS §1.3 für die SecurityMode-Definition.
 
 | Modus | Bedeutung |
-| :--- | :--- |
-| `NORMAL` | Produktivbetrieb. Physische Ausführung erlaubt. |
-| `SANDBOX` | Simulationsbetrieb. Keine physische Wirkung auf echte Proben. |
-| `DEV_SANDBOX_ONLY` | Reine Test/Dev-Umgebung. Keine Produktivdaten, keine echten Proben. |
-| `RECOVERY` | Ausnahmezustand. Nur Zustandsklärung und Aufräumarbeiten. |
+| --- | --- |
+| NORMAL | Produktivbetrieb. Physische Ausführung erlaubt. |
+| SANDBOX | Simulationsbetrieb. Keine physische Wirkung auf echte Proben. |
+| DEV_SANDBOX_ONLY | Reine Test/Dev-Umgebung. Keine Produktivdaten, keine echten Proben. |
+| RECOVERY | Ausnahmezustand. Nur Zustandsklärung und Aufräumarbeiten. |
 
 ### §17.2 HAL-Reaktion auf Sicherheitsmodi
 
 | Modus | Physisch | Compute | Sandbox |
-| :--- | :--- | :--- | :--- |
-| `NORMAL` | ✅ wenn `physical_actuation = true` und Lease `physical_execution_allowed = true` | ✅ wenn `compute_capable = true` und Lease `compute_execution_allowed = true` | ✅ |
-| `SANDBOX` | ❌ | Nur Sandbox-Compute | ✅ wenn `sandbox_capable = true` |
-| `DEV_SANDBOX_ONLY` | ❌ | Nur Dev-Compute | Nur Dev-Sandbox |
-| `RECOVERY` | ❌ (außer `reconcile_*`) | ❌ (außer `reconcile_*`) | ❌ |
+| --- | --- | --- | --- |
+| NORMAL | ✅ wenn `physical_actuation = true` und Lease `physical_execution_allowed = true` | ✅ wenn `compute_capable = true` und Lease `compute_execution_allowed = true` | ✅ |
+| SANDBOX | ❌ | Nur Sandbox-Compute | ✅ wenn `sandbox_capable = true` |
+| DEV_SANDBOX_ONLY | ❌ | Nur Dev-Compute | Nur Dev-Sandbox |
+| RECOVERY | ❌ (außer `reconcile_*`) | ❌ (außer `reconcile_*`) | ❌ |
 
 → Siehe CHARTER §SR-35 bis §SR-39 für die Security-Mode-Regeln.
 
@@ -865,9 +913,9 @@ HAL sieht normalerweise nur slotbezogene Lease-Referenzen.
 Wenn der Modus nicht zum Slot passt:
 
 | Fehler | Fehlerklasse |
-| :--- | :--- |
-| `PHYSICAL_EXECUTION_FORBIDDEN` | OPERATIONAL |
-| `COMPUTE_EXECUTION_FORBIDDEN` | OPERATIONAL |
+| --- | --- |
+| PHYSICAL_EXECUTION_FORBIDDEN | OPERATIONAL |
+| COMPUTE_EXECUTION_FORBIDDEN | OPERATIONAL |
 
 → Siehe CHARTER §SR-08 für die Operational/Scientific-Trennung.
 
@@ -915,6 +963,7 @@ STAGE_RELEASE_DENIED
 ### §18.3 Zusätzliche Anforderungen
 
 Der Dummy-HAL muss zusätzlich können:
+
 - Slot-Zustände deterministisch zurückgeben
 - Zonen-Zustände deterministisch zurückgeben
 - ESTOP auslösen und zurücksetzen, aber nur über autorisierte Dummy-Funktionen
@@ -932,7 +981,7 @@ Der Dummy-HAL muss zusätzlich können:
 
 ### §18.4 Regel
 
-Der Dummy-HAL darf **keine** echte Hardware ansprechen.
+Der Dummy-HAL darf keine echte Hardware ansprechen.
 
 ---
 
@@ -941,7 +990,7 @@ Der Dummy-HAL darf **keine** echte Hardware ansprechen.
 ### §19.1 Übersicht
 
 | Phase | Name | Dauer (Schätzung) |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | HAL-H0 | HAL-Vertrag in Hauptstruktur bestätigen | 1 Tag |
 | HAL-H1 | Interface und Datenmodelle | 3–5 Tage |
 | HAL-H2 | Slot- und Lease-Logik | 2–3 Tage |
@@ -953,22 +1002,26 @@ Der Dummy-HAL darf **keine** echte Hardware ansprechen.
 ### §19.2 Phase HAL-H0: HAL-Vertrag bestätigen
 
 **Aufgaben:**
+
 - HAL-Minimalvertrag mit dieser Datei abgleichen
 - Dokumentenhierarchie bestätigen
 - Keine sicherheitswidrigen Abweichungen zulassen
 
 **Akzeptanz:**
+
 - [ ] Strukturversion 1.1.1 bleibt maßgeblich
 - [ ] HAL v0.2.0 ist als präzisierte Spezifikation akzeptiert
 
 ### §19.3 Phase HAL-H1: Interface und Datenmodelle
 
 **Aufgaben:**
+
 - `hal_interface.py`
 - `dummy_hal.py`
 - Pydantic-Modelle für alle HAL-Verträge (→ CONTRACTS §3)
 
 **Akzeptanz:**
+
 - [ ] Alle Modelle sind validierbar
 - [ ] Keine wissenschaftlichen Felder
 - [ ] Fehlerklassen sind korrekt getrennt
@@ -977,6 +1030,7 @@ Der Dummy-HAL darf **keine** echte Hardware ansprechen.
 ### §19.4 Phase HAL-H2: Slot- und Lease-Logik
 
 **Aufgaben:**
+
 - Slot-State-Handling
 - Lease-Validierung
 - Slot-Mutex
@@ -984,6 +1038,7 @@ Der Dummy-HAL darf **keine** echte Hardware ansprechen.
 - Idempotenzprüfung
 
 **Akzeptanz:**
+
 - [ ] Kein Slot wird doppelt belegt
 - [ ] Ungültige Leases werden abgelehnt
 - [ ] Timeouts werden korrekt gemeldet
@@ -993,6 +1048,7 @@ Der Dummy-HAL darf **keine** echte Hardware ansprechen.
 ### §19.5 Phase HAL-H3: Zonen-Mutex und Prozess-Logik
 
 **Aufgaben:**
+
 - Zone-State-Handling
 - Zonen-Lock-Anfrage und -Antwort
 - Prozess-State-Handling
@@ -1001,6 +1057,7 @@ Der Dummy-HAL darf **keine** echte Hardware ansprechen.
 - Stage-Release-Policy
 
 **Akzeptanz:**
+
 - [ ] Keine Zone wird doppelt belegt
 - [ ] Zonen-Locks werden korrekt angefragt und freigegeben
 - [ ] Langzeit-Prozesse können gestartet, angehalten und fortgesetzt werden
@@ -1010,6 +1067,7 @@ Der Dummy-HAL darf **keine** echte Hardware ansprechen.
 ### §19.6 Phase HAL-H4: ESTOP und Hardware-Interlocks
 
 **Aufgaben:**
+
 - ESTOP-Zustandsmaschine
 - Hardware-Interlock-Zustandsmaschine
 - `report_estop`
@@ -1020,6 +1078,7 @@ Der Dummy-HAL darf **keine** echte Hardware ansprechen.
 - Audit-Events für ESTOP und Interlocks
 
 **Akzeptanz:**
+
 - [ ] ESTOP stoppt Kommandos
 - [ ] ESTOP suspendiert Leases
 - [ ] Hardware-Interlock stoppt Kommandos
@@ -1031,12 +1090,14 @@ Der Dummy-HAL darf **keine** echte Hardware ansprechen.
 ### §19.7 Phase HAL-H5: Compute-Modell und Parameter-Schema
 
 **Aufgaben:**
+
 - Compute-Ressourcenmodell
 - Compute-spezifische Fehlercodes
 - Parameter-Schema-Registry
 - Parameter-Schema-Validierung
 
 **Akzeptanz:**
+
 - [ ] Compute-Ressourcen werden korrekt angefragt
 - [ ] Compute-Fehler sind operational (→ CHARTER §SR-08)
 - [ ] Parameter-Schemas werden korrekt validiert
@@ -1045,6 +1106,7 @@ Der Dummy-HAL darf **keine** echte Hardware ansprechen.
 ### §19.8 Phase HAL-H6: Dummy-HAL und Integration
 
 **Aufgaben:**
+
 - Vollständiger Dummy-HAL
 - Alle Fehlermodi
 - Integration mit Questor-HAL-Bridge
@@ -1052,6 +1114,7 @@ Der Dummy-HAL darf **keine** echte Hardware ansprechen.
 - Operational-Audit
 
 **Akzeptanz:**
+
 - [ ] Dummy kann alle relevanten Szenarien simulieren
 - [ ] Keine echte Hardware nötig
 - [ ] Suite H kann vorbereitet werden
@@ -1062,7 +1125,7 @@ Der Dummy-HAL darf **keine** echte Hardware ansprechen.
 ## §20 Zusammenfassung der Architektur-Entscheidungen
 
 | Thema | Entscheidung | Quelle |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | HAL ist dünne Schicht | Ja | §1.2 |
 | HAL ist deterministisch | Ja, keine LLM-Logik | §1.2 |
 | HAL ist fail-closed | Ja | §1.2 |
@@ -1087,15 +1150,45 @@ Der Dummy-HAL darf **keine** echte Hardware ansprechen.
 | Sicherheitsmodus | 4 Modi, HAL prüft | §17 |
 | Dummy-HAL | Alle Fehlermodi simulierbar | §18 |
 | Implementierungsphasen | HAL-H0 bis HAL-H6 | §19 |
+| Atlas-Hybrid-Kompatibilität | HAL erfordert keine Änderungen; Atlas-Hybrid-Felder gehen nicht an HAL | §0.1 |
 
 ---
 
 ## §21 Dokumentenhierarchie
 
 Dieses Dokument steht in der Schicht `specs/` und referenziert:
+
 - `foundation/CHARTER.md` für Sicherheitsregeln (CHARTER §SR-XX)
 - `foundation/CONTRACTS.md` für Datenverträge (CONTRACTS §X.X)
 - `specs/QUESTOR.md` für Questor-spezifische Details
 - `specs/GREMIUM.md` für Gremium-spezifische Details
 
 **Regel:** Änderungen an HAL-Modulen in diesem Dokument erfordern eine Versionsänderung und eine Überprüfung der referenzierten Dokumente.
+
+### §21.1 Kritische Warnung: Keine Atlas-Hybrid-Felder an HAL
+
+Wenn eine Implementierung erwartet, dass HAL Atlas-Hybrid-Felder wie `atlas_expectation_ref`, `frontier_candidate_ref`, `evidence_kind` oder `evidence_class` empfängt oder verarbeitet, ist die Implementierung falsch.
+
+→ Siehe CHARTER §SR-04 und §SR-08.
+→ Siehe specs/QUESTOR.md §8 (HAL-Bridge-Übersetzungslogik).
+
+---
+
+## Anhang A: Akzeptanzprüfung für ATLAS-HYB-1.0.0
+
+Nach dem Einfügen dieser Änderungen sollte `HAL.md` folgende Kriterien erfüllen:
+
+| # | Kriterium | Status |
+|---:|---|---|
+| 1 | Kopfzeile enthält Version `1.1.0-atlas-hyb.1` | ☐ |
+| 2 | `§0.1 Änderungsantrag ATLAS-HYB-1.0.0` ist vorhanden | ☐ |
+| 3 | `§0.1` bestätigt, dass HAL keine funktionalen Änderungen braucht | ☐ |
+| 4 | `§1.4` enthält neue Verbote für Atlas-Hybrid-Felder | ☐ |
+| 5 | `§15.2` enthält neue Regeln für Atlas-Hybrid-Felder | ☐ |
+| 6 | `§20` enthält Atlas-Hybrid-Kompatibilitätszeile | ☐ |
+| 7 | Keine neuen HAL-Funktionen wurden definiert | ☐ |
+| 8 | Keine neuen Datenverträge wurden definiert | ☐ |
+| 9 | Keine neuen Sicherheitsregeln wurden definiert | ☐ |
+| 10 | Die 16 HAL-Schnittstellenfunktionen bleiben unverändert | ☐ |
+| 11 | Die Fehlerklassentrennung (OPERATIONAL/SAFETY) bleibt unverändert | ☐ |
+| 12 | CHARTER-Hierarchie bleibt gewahrt | ☐ |

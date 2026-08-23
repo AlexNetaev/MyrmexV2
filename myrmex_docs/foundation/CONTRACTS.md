@@ -1,33 +1,65 @@
 # 📜 CONTRACTS — DATENVERTRÄGE UND ZUSTANDSMASCHINEN
 
 | Feld | Wert |
-| :--- | :--- |
-| **Dateiname** | `foundation/CONTRACTS.md` |
-| **Version** | 1.0.0 (New Architecture) |
-| **Status** | **BINDEND** — Alle Datenverträge des Systems |
-| **System** | MYRMEX v2.4.0 + Questor v0.2.3 + HAL v0.2.0 |
-| **Geltung** | Single Source of Truth für alle Pydantic-Modelle und Zustandsmaschinen |
-| **Datum** | 21. August 2026 |
+| --- | --- |
+| Dateiname | `foundation/CONTRACTS.md` |
+| Version | `1.1.0-atlas-hyb.1` |
+| Status | `ÄNDERUNGSANTRAG ATLAS-HYB-1.0.0 — nach Freigabe BINDEND` |
+| System | `MYRMEX v2.4.0 + Questor v0.2.3 + HAL v0.2.0` |
+| Geltung | `Single Source of Truth für alle Pydantic-Modelle und Zustandsmaschinen` |
+| Datum | `21. August 2026` |
 
 ---
 
 ## 0. Geltung und Änderungsregeln
 
-Dieses Dokument definiert **alle** Datenverträge des Systems.
+Dieses Dokument definiert alle Datenverträge des Systems.
 
-**Regel:** Kein anderes Dokument darf Datenverträge definieren oder ändern.
-Wenn ein Modul-Dokument (specs/) einen neuen Vertrag benötigt, muss es einen
-**Änderungsantrag** an dieses Dokument stellen. Die Änderung wird hier eingearbeitet.
+Regel: Kein anderes Dokument darf Datenverträge definieren oder ändern.
 
-**Referenz:** Alle anderen Dokumente verweisen auf dieses Dokument:
-→ `CONTRACTS §2.1: ResearchPackage`
+Wenn ein Modul-Dokument (`specs/`) einen neuen Vertrag benötigt, muss es einen Änderungsantrag an dieses Dokument stellen. Die Änderung wird hier eingearbeitet.
+
+Referenz: Alle anderen Dokumente verweisen auf dieses Dokument:
+
+→ `CONTRACTS §2.1: ResearchPackage`  
 → `CONTRACTS §7.1: Questor-Zustandsmaschine`
 
 ---
 
-## §1 Paket-Verträge
+## §0.1 Änderungsantrag ATLAS-HYB-1.0.0 — Atlas-Hybrid-Erweiterung
 
-### §1.1 ResearchPackage
+Dieser Änderungsantrag führt die Datenverträge für das Atlas-Hybrid-System ein.
+
+Das Atlas-Hybrid-System erweitert den Atlas um:
+
+1. Evidence-Semantik  
+2. Qualitäts- und Reproduktionsmetadaten  
+3. Typed Dimensions und ZoneGeometry  
+4. Atlas-Knoten und Atlas-Kanten  
+5. Objective Families für Multi-Objective-Forschung  
+6. DiagnosticResolution  
+7. SafetyConstraints  
+8. ExclusionConstraints  
+9. FrontierCandidates  
+10. ResearchTopics  
+11. ExplorationPolicy  
+12. AtlasHybridConfig  
+
+Regeln:
+
+- Dieser Änderungsantrag definiert keine neuen Sicherheitsregeln.
+- Dieser Änderungsantrag ändert keine CHARTER-Regeln.
+- Questor erhält keine Schreibrechte in Atlas oder Archiv.
+- HAL erhält keine wissenschaftliche Interpretation.
+- Alle neuen Felder sind optional oder haben sichere Defaults.
+- Bestehende Verträge bleiben rückwärtskompatibel.
+- Wenn neue Felder fehlen, gilt das bisherige Verhalten.
+
+---
+
+# §1 Paket-Verträge
+
+## §1.1 ResearchPackage
 
 ```python
 ResearchPackage:
@@ -48,14 +80,21 @@ ResearchPackage:
     domain_metadata: dict[str, Any]
     questor_spec: Optional[QuestorSpec]
     planning_hints: Optional[PlanningHints]  # ← NEU: Vertraglich verankert
+
+    # ── ATLAS-HYB-1.0.0: Neue optionale Atlas-Hybrid-Felder ──
+    atlas_expectation_ref: Optional[str]
+    objective_family_ref: Optional[str]
+    frontier_candidate_ref: Optional[str]
 ```
 
-**Pflichtfelder für Validierung:**
-- `routing_graph.max_loop_iterations`: int, Pflicht
-- `routing_graph.branch_condition_timeout`: float, Pflicht
-- `parameter_bounds`: min < max, keine NaN, keine Infinity
+Pflichtfelder für Validierung:
 
-**Sonderregel `planning_hints`:**
+- `routing_graph.max_loop_iterations`: `int`, Pflicht
+- `routing_graph.branch_condition_timeout`: `float`, Pflicht
+- `parameter_bounds`: `min < max`, keine `NaN`, keine `Infinity`
+
+Sonderregel `planning_hints`:
+
 ```python
 PlanningHints:
     preferred_strategy: Optional[str]
@@ -66,7 +105,20 @@ PlanningHints:
     hinweis_text: Optional[str]              # Freitext, max 512 Zeichen, Injection-Scan
 ```
 
-### §1.2 QuestorSpec
+Sonderregeln ATLAS-HYB-1.0.0 für ResearchPackage:
+
+- `atlas_expectation_ref` ist eine Referenz auf eine Atlas-Hypothese, einen Atlas-Knoten oder eine Erwartung.
+- `atlas_expectation_ref` ist Pass-Through für Questor.
+- Questor darf `atlas_expectation_ref` nicht als LLM-Kontext verwenden.
+- Questor darf `atlas_expectation_ref` nicht verwenden, um direkt auf den Atlas zuzugreifen.
+- `objective_family_ref` verweist auf eine `ObjectiveFamily` gemäß `§6.10.10`.
+- `frontier_candidate_ref` verweist auf einen `FrontierCandidate` gemäß `§6.10.14`.
+- Alle drei Felder sind optional.
+- Wenn `atlas_expectation_ref` fehlt, darf daraus keine Bestätigung abgeleitet werden.
+
+---
+
+## §1.2 QuestorSpec
 
 ```python
 QuestorSpec:
@@ -84,11 +136,14 @@ QuestorSpec:
     operational_metrics_export: allowed | forbidden
 ```
 
-**Korrektur-Hinweis:** `allowed_capabilities` ist `list[str]`, NICHT `list[Capability]`.
-Der Typ `Capability` existiert nicht. Die strukturierten Metadaten kommen aus der
-CapabilityRegistry (`specs/QUESTOR.md §11`), nicht aus dem QuestorSpec.
+Korrektur-Hinweis:
 
-**Sichere Defaults (wenn `questor_spec` fehlt):**
+`allowed_capabilities` ist `list[str]`, NICHT `list[Capability]`.
+
+Der Typ `Capability` existiert nicht. Die strukturierten Metadaten kommen aus der CapabilityRegistry (`specs/QUESTOR.md §11`), nicht aus dem QuestorSpec.
+
+Sichere Defaults (wenn `questor_spec` fehlt):
+
 ```python
 DefaultQuestorSpec:
     spec_version: "0.2.3"
@@ -120,7 +175,9 @@ DefaultQuestorSpec:
     operational_metrics_export: allowed
 ```
 
-### §1.3 QuestorDispatchEnvelope
+---
+
+## §1.3 QuestorDispatchEnvelope
 
 ```python
 QuestorDispatchEnvelope:
@@ -138,14 +195,17 @@ QuestorDispatchEnvelope:
     idempotency_key: str                     # Kanonisch gebildet
 ```
 
-**Pflichtregeln:**
+Pflichtregeln:
+
 - `gate_record_ref` ist Pflicht → fehlt: `PACKAGE_INVALID`, `OPERATIONAL`
 - `gate_mode` darf nicht im Widerspruch zum Gate Record stehen
 - `lease_grants` müssen konsistent sein
 - `security_mode` muss zu Gate und Leases passen
-- `attempt_id`: 0–999999, keine führenden Nullen in kanonischer Form
+- `attempt_id`: `0–999999`, keine führenden Nullen in kanonischer Form
 
-### §1.4 RoutingGraph
+---
+
+## §1.4 RoutingGraph
 
 ```python
 RoutingGraph:
@@ -157,9 +217,9 @@ RoutingGraph:
 
 ---
 
-## §2 Ergebnis-Verträge
+# §2 Ergebnis-Verträge
 
-### §2.1 QuestorErgebnisPaket
+## §2.1 QuestorErgebnisPaket
 
 ```python
 QuestorErgebnisPaket:
@@ -184,19 +244,25 @@ QuestorErgebnisPaket:
     questor_metadata: Optional[QuestorMetadata]
 ```
 
-**Semantik `abbruch_klasse`:**
+Semantik `abbruch_klasse`:
+
 | Status | `abbruch_grund` | `abbruch_klasse` |
 | :--- | :--- | :--- |
 | `erfolgreich` | `null` | `OPERATIONAL` |
 | `fehlgeschlagen` | Pflicht | Pflicht |
 | `abgebrochen` | Pflicht | Pflicht |
 
-**Kritische Regel:** `abbruch_klasse` ist eine **Ergebnisklasse**, keine wörtliche Abbruchklasse.
+Kritische Regel:
+
+`abbruch_klasse` ist eine Ergebnisklasse, keine wörtliche Abbruchklasse.
+
 Bei Erfolg ist `abbruch_grund = null` und `abbruch_klasse = OPERATIONAL`.
 
-**Keine freien Zusatzfelder:** Alle zusätzlichen Daten gehören in `questor_metadata`.
+Keine freien Zusatzfelder: Alle zusätzlichen Daten gehören in `questor_metadata`.
 
-### §2.2 QuestorMetadata
+---
+
+## §2.2 QuestorMetadata
 
 ```python
 QuestorMetadata:
@@ -207,12 +273,15 @@ QuestorMetadata:
     template_feedback: Optional[TemplateFeedback]
 ```
 
-**Regeln:**
-- `questor_metadata` erzeugt **keine** Kristalle oder Signale
-- `operational_metrics` dürfen **nur** operational verwendet werden
-- `local_audit` enthält **keine** Blackbox-Inhalte
+Regeln:
 
-### §2.3 LocalAuditRef
+- `questor_metadata` erzeugt keine Kristalle oder Signale
+- `operational_metrics` dürfen nur operational verwendet werden
+- `local_audit` enthält keine Blackbox-Inhalte
+
+---
+
+## §2.3 LocalAuditRef
 
 ```python
 LocalAuditRef:
@@ -224,12 +293,15 @@ LocalAuditRef:
     access_policy_summary: str
 ```
 
-**Regeln:**
+Regeln:
+
 - Kein Pfad, der automatisch vom Gremium gelesen wird
 - Keine Übergabe der Blackbox selbst
 - Nur Referenz, Digest und Policy-Zusammenfassung
 
-### §2.4 OperationalMetrics
+---
+
+## §2.4 OperationalMetrics
 
 ```python
 OperationalMetrics:
@@ -249,13 +321,13 @@ OperationalMetrics:
     health_restart_count: int                # ← NEU aus Health-Monitoring
 ```
 
-**Regel:** Rein operational. Keine wissenschaftliche Interpretation.
+Regel: Rein operational. Keine wissenschaftliche Interpretation.
 
 ---
 
-## §3 HAL-Verträge
+# §3 HAL-Verträge
 
-### §3.1 EnvironmentManifest
+## §3.1 EnvironmentManifest
 
 ```python
 EnvironmentManifest:
@@ -273,7 +345,9 @@ EnvironmentManifest:
     supported_resource_classes: list[str]
 ```
 
-### §3.2 SlotDescriptor
+---
+
+## §3.2 SlotDescriptor
 
 ```python
 SlotDescriptor:
@@ -300,7 +374,9 @@ SlotDescriptor:
     supported_runtimes: list[str]
 ```
 
-### §3.3 HALCommand
+---
+
+## §3.3 HALCommand
 
 ```python
 HALCommand:
@@ -322,7 +398,9 @@ HALCommand:
     correlation_id: Optional[str]
 ```
 
-### §3.4 ProcessCommand
+---
+
+## §3.4 ProcessCommand
 
 ```python
 ProcessCommand:
@@ -350,11 +428,14 @@ ProcessCommand:
     correlation_id: Optional[str]
 ```
 
-**Kritische Trennung:**
+Kritische Trennung:
+
 - `timeout_s`: Kommando-Timeout (RPC-Aufruf, Sekunden)
 - `expected_process_duration_s`: Prozess-Dauer (physikalisch, Sekunden bis Tage)
 
-### §3.5 HALCommandResult
+---
+
+## §3.5 HALCommandResult
 
 ```python
 HALCommandResult:
@@ -371,7 +452,9 @@ HALCommandResult:
     operational_metrics: Optional[dict[str, float]]
 ```
 
-### §3.6 ProcessResult
+---
+
+## §3.6 ProcessResult
 
 ```python
 ProcessResult:
@@ -391,7 +474,9 @@ ProcessResult:
     operational_metrics: Optional[dict[str, float]]
 ```
 
-### §3.7 SlotState
+---
+
+## §3.7 SlotState
 
 ```python
 SlotState:
@@ -410,7 +495,9 @@ SlotState:
     last_state_change_at: str
 ```
 
-### §3.8 ZoneState
+---
+
+## §3.8 ZoneState
 
 ```python
 ZoneState:
@@ -422,7 +509,9 @@ ZoneState:
     last_state_change_at: str
 ```
 
-### §3.9 ProcessState
+---
+
+## §3.9 ProcessState
 
 ```python
 ProcessState:
@@ -444,7 +533,9 @@ ProcessState:
     last_error: Optional[str]
 ```
 
-### §3.10 EstopState
+---
+
+## §3.10 EstopState
 
 ```python
 EstopState:
@@ -464,7 +555,9 @@ EstopState:
     acknowledged_by: Optional[str]
 ```
 
-### §3.11 HardwareInterlockEvent
+---
+
+## §3.11 HardwareInterlockEvent
 
 ```python
 HardwareInterlockEvent:
@@ -480,7 +573,9 @@ HardwareInterlockEvent:
     safe_state_verified: bool
 ```
 
-### §3.12 HAL-Interface (16 Funktionen)
+---
+
+## §3.12 HAL-Interface (16 Funktionen)
 
 ```python
 class HALInterface(Protocol):
@@ -504,9 +599,9 @@ class HALInterface(Protocol):
 
 ---
 
-## §4 Lease- und Gate-Verträge
+# §4 Lease- und Gate-Verträge
 
-### §4.1 LeaseGrant
+## §4.1 LeaseGrant
 
 ```python
 LeaseGrant:
@@ -519,7 +614,9 @@ LeaseGrant:
     execution_flags: dict[str, bool]         # Default: alle False
 ```
 
-### §4.2 LeaseStatus
+---
+
+## §4.2 LeaseStatus
 
 ```python
 LeaseStatus:
@@ -530,7 +627,9 @@ LeaseStatus:
     remaining_ttl: float                     # Nicht-negativ
 ```
 
-### §4.3 PathLease
+---
+
+## §4.3 PathLease
 
 ```python
 PathLease:
@@ -541,9 +640,11 @@ PathLease:
     zone_mutex_refs: list[str]
 ```
 
-**Regel:** Pfad-Lease ist atomar: alle oder keine Slots. Keine partielle Reservierung.
+Regel: Pfad-Lease ist atomar: alle oder keine Slots. Keine partielle Reservierung.
 
-### §4.4 GateRecord
+---
+
+## §4.4 GateRecord
 
 ```python
 GateRecord:
@@ -559,7 +660,9 @@ GateRecord:
     signature: str                           # Digitale Signatur
 ```
 
-### §4.5 StageReleasePolicy
+---
+
+## §4.5 StageReleasePolicy
 
 ```python
 StageReleasePolicy:
@@ -575,9 +678,9 @@ StageRelease:
 
 ---
 
-## §5 Questor-Interna-Verträge
+# §5 Questor-Interna-Verträge
 
-### §5.1 LoopTemplate
+## §5.1 LoopTemplate
 
 ```python
 LoopTemplate:
@@ -608,12 +711,15 @@ LoopTemplate:
         total_energy_cost: float
 ```
 
-**Neues Feld `is_recovery_template`:**
+Neues Feld `is_recovery_template`:
+
 - Default: `false`
 - Wenn `security_mode = RECOVERY`: Nur Templates mit `is_recovery_template = true` sind erlaubt
 - Recovery-Templates dürfen keine `requires_physical_actuation = true` haben
 
-### §5.2 LoopStep
+---
+
+## §5.2 LoopStep
 
 ```python
 LoopStep:
@@ -640,14 +746,17 @@ LoopStep:
         energy_cost: float
 ```
 
-**Bedingte Pflicht für `capability`:**
-- Bei `step_type = HAL_COMMAND`: `capability` ist **Pflicht**
-- Bei `step_type = PROCESS_COMMAND`: `capability` ist **Pflicht**
-- Bei `step_type = WAIT`: `capability` ist **verboten** (muss `None` sein)
-- Bei `step_type = EVALUATE`: `capability` ist **verboten** (muss `None` sein)
+Bedingte Pflicht für `capability`:
+
+- Bei `step_type = HAL_COMMAND`: `capability` ist Pflicht
+- Bei `step_type = PROCESS_COMMAND`: `capability` ist Pflicht
+- Bei `step_type = WAIT`: `capability` ist verboten (muss `None` sein)
+- Bei `step_type = EVALUATE`: `capability` ist verboten (muss `None` sein)
 - Bei `step_type = MEASURE`: `capability` ist optional
 
-### §5.3 ExpeditionLedger
+---
+
+## §5.3 ExpeditionLedger
 
 ```python
 ExpeditionLedger:
@@ -671,7 +780,9 @@ ExpeditionLedger:
     archive_path: Optional[str]
 ```
 
-### §5.4 WAL-Eintrag
+---
+
+## §5.4 WAL-Eintrag
 
 ```python
 WALEntry:
@@ -688,7 +799,9 @@ WALEntry:
     status: PENDING | COMMITTED | ROLLED_BACK
 ```
 
-### §5.5 KristallKandidat
+---
+
+## §5.5 KristallKandidat
 
 ```python
 KristallKandidat:
@@ -701,12 +814,35 @@ KristallKandidat:
     ziel_erreicht: bool
     ist_diagnostic: bool
     cluster_integration: bool
+
+    # ── ATLAS-HYB-1.0.0: Neue optionale Atlas-Hybrid-Felder ──
+    expectation_ref: Optional[str]
+    confirms_expectation: Optional[bool]
+    evidence_class: Optional[EvidenceClass]
+    metric_vector: Optional[dict[str, float]]
+    evidence_quality: Optional[EvidenceQuality]
+    reproducibility_ref: Optional[str]
 ```
 
-**Definition:** Der Kristallkandidat ist der **verwendete Loop** mit den jeweiligen
-Einstellungen und dem Ergebnis — NICHT der Messwert allein.
+Definition:
 
-### §5.6 SignalEvent
+Der Kristallkandidat ist der verwendete Loop mit den jeweiligen Einstellungen und dem Ergebnis — NICHT der Messwert allein.
+
+Sonderregeln ATLAS-HYB-1.0.0 für KristallKandidat:
+
+- `expectation_ref` referenziert die Atlas-Erwartung, gegen die das Ergebnis bewertet wurde.
+- `confirms_expectation` beschreibt, ob das Ergebnis die Erwartung bestätigt oder widerlegt.
+- `confirms_expectation = None` bedeutet: keine sichere Zuordnung möglich.
+- `evidence_class` beschreibt die Herkunftsklasse der Evidenz.
+- `metric_vector` kann mehrere Zielgrößen enthalten, z. B. `yield`, `purity`, `latency`, `energy`.
+- `evidence_quality` beschreibt statistische Qualität und Vertrauensmetadaten.
+- `reproducibility_ref` verweist auf einen `ReproducibilityContext` gemäß `§6.10.3`.
+- Wenn `ist_diagnostic = true`, darf der Kristall nicht automatisch in normale Cluster integriert werden.
+- Wenn `cluster_integration = false`, bleibt der Kristall diagnostisch.
+
+---
+
+## §5.6 SignalEvent
 
 ```python
 SignalEvent:
@@ -715,13 +851,43 @@ SignalEvent:
     timestamp: str
     source_package_id: str
     konfidenz: float
+
+    # ── ATLAS-HYB-1.0.0: Neue optionale Atlas-Hybrid-Felder ──
+    evidence_kind: Optional[EvidenceKind]
+    evidence_class: Optional[EvidenceClass]
+    expectation_ref: Optional[str]
+    observation_direction: Optional[ObservationDirection]
+    is_diagnostic: bool = False
+    is_policy: bool = False
+    quality: Optional[EvidenceQuality]
+    validity: Optional[ValidityWindow]
+    physical_time_s: Optional[float]
+    node_ref: Optional[str]
 ```
+
+Sonderregeln ATLAS-HYB-1.0.0 für SignalEvent:
+
+- `signal_typ` bleibt das primäre Signal-Symbol.
+- `evidence_kind` beschreibt die fachliche Semantik des Signals.
+- Wenn `evidence_kind` fehlt, darf der Kartograph die Semantik deterministisch ableiten.
+- Solange `evidence_kind` nicht sicher abgeleitet wurde, darf kein Kristall aus dem Signal erzeugt werden.
+- `evidence_class` beschreibt die Herkunft der Evidenz.
+- `expectation_ref` referenziert die getestete Atlas-Erwartung.
+- `observation_direction` beschreibt, ob die Beobachtung eine Erwartung bestätigt, widerlegt oder neutral ist.
+- `is_diagnostic = true` markiert diagnostische Evidenz.
+- Diagnostische Signale dürfen nicht automatisch als wissenschaftliche Conflict-Energie gezählt werden.
+- `is_policy = true` markiert Governance- oder Policy-bezogene Signale.
+- Policy-Signale dürfen nicht automatisch als wissenschaftlicher Widerspruch gezählt werden.
+- `quality` enthält statistische Qualität.
+- `validity` enthält zeitliche Gültigkeit.
+- `physical_time_s` kann reale Prozesszeit abbilden, unabhängig von Gremium-Zyklen.
+- `node_ref` kann einen Atlas-Knoten referenzieren.
 
 ---
 
-## §6 Querschnitts-Verträge
+# §6 Querschnitts-Verträge
 
-### §6.1 SanitizationConfig
+## §6.1 SanitizationConfig
 
 ```python
 SanitizationConfig:
@@ -737,7 +903,9 @@ SanitizationConfig:
     fallback_on_error: DETERMINISTIC
 ```
 
-### §6.2 SanitizationResult
+---
+
+## §6.2 SanitizationResult
 
 ```python
 SanitizationResult:
@@ -751,7 +919,9 @@ SanitizationResult:
     sanitized_hash: str
 ```
 
-### §6.3 LLMOutputValidation
+---
+
+## §6.3 LLMOutputValidation
 
 ```python
 LLMOutputValidation:
@@ -765,7 +935,9 @@ LLMOutputValidation:
     fallback_reason: Optional[str]
 ```
 
-### §6.4 CapabilityDefinition
+---
+
+## §6.4 CapabilityDefinition
 
 ```python
 CapabilityDefinition:
@@ -798,7 +970,9 @@ CapabilityDefinition:
     successor_capability: Optional[str]
 ```
 
-### §6.5 CapabilityCheckResult
+---
+
+## §6.5 CapabilityCheckResult
 
 ```python
 CapabilityCheckResult:
@@ -811,7 +985,9 @@ CapabilityCheckResult:
     warnings: list[str]
 ```
 
-### §6.6 TrailPolicy
+---
+
+## §6.6 TrailPolicy
 
 ```python
 TrailPolicy:
@@ -826,7 +1002,9 @@ TrailPolicy:
     redaction_level: NONE | BASIC | STRONG
 ```
 
-### §6.7 HealthMonitorConfig
+---
+
+## §6.7 HealthMonitorConfig
 
 ```python
 HealthMonitorConfig:
@@ -844,7 +1022,9 @@ HealthMonitorConfig:
     max_consecutive_alerts: int              # Default: 5
 ```
 
-### §6.8 ShutdownConfig
+---
+
+## §6.8 ShutdownConfig
 
 ```python
 ShutdownConfig:
@@ -857,9 +1037,12 @@ ShutdownConfig:
     poll_shutdown_flag_interval_s: float     # Default: 5.0
 ```
 
-### §6.9 Queue-Dateiformate
+---
 
-**Envelope-Datei** (`pending/`, `processing/`):
+## §6.9 Queue-Dateiformate
+
+Envelope-Datei (`pending/`, `processing/`):
+
 ```json
 {
     "schema_version": "0.3.1",
@@ -870,7 +1053,8 @@ ShutdownConfig:
 }
 ```
 
-**Result-Datei** (`completed/`, `failed/`):
+Result-Datei (`completed/`, `failed/`):
+
 ```json
 {
     "schema_version": "0.3.1",
@@ -881,7 +1065,8 @@ ShutdownConfig:
 }
 ```
 
-**Registry** (`registry.json`):
+Registry (`registry.json`):
+
 ```json
 {
     "schema_version": "0.3.1",
@@ -900,145 +1085,782 @@ ShutdownConfig:
 }
 ```
 
-**Dateinamen-Konvention:**
-```
+Dateinamen-Konvention:
+
+```python
 file_name = idempotency_key.replace(":", "_")
 ```
 
 ---
 
-## §7 Zustandsmaschinen
+## §6.10 Atlas-Hybrid-Querschnittsverträge
 
-### §7.1 Questor-Zustandsmaschine (11 Zustände)
+Dieser Abschnitt definiert die Datenverträge des Atlas-Hybrid-Systems.
+
+Regeln:
+
+- Diese Verträge beschreiben Atlas-, Frontier-, Diagnose- und Governance-Zustände.
+- Diese Verträge begründen keine Schreibrechte für Questor.
+- Questor darf diese Verträge nicht verwenden, um direkt in den Atlas zu schreiben.
+- HAL darf diese Verträge nicht wissenschaftlich interpretieren.
+- Die Schreibrechte liegen ausschließlich beim Gremium, insbesondere bei Archivar und Kartograph.
+
+---
+
+### §6.10.1 EvidenceQuality
+
+```python
+EvidenceQuality:
+    source_confidence: float                 # 0.0–1.0
+    statistical_confidence: Optional[float]  # 0.0–1.0
+    sample_size: int = 1
+    replicate_count: int = 1
+    variance: Optional[float]
+    measurement_uncertainty: Optional[float]
+    method_class: Optional[str]
+    batch_id: Optional[str]
+```
+
+Regeln für EvidenceQuality:
+
+- `source_confidence` muss im Bereich `[0.0, 1.0]` liegen.
+- `statistical_confidence`, falls gesetzt, muss im Bereich `[0.0, 1.0]` liegen.
+- `sample_size` muss `>= 0` sein.
+- `replicate_count` muss `>= 0` sein.
+- `variance`, falls gesetzt, muss `>= 0` sein.
+- `measurement_uncertainty`, falls gesetzt, muss `>= 0` sein.
+- `batch_id` kann Batch- oder Chargeneffekte abbilden.
+
+---
+
+### §6.10.2 ValidityWindow
+
+```python
+ValidityWindow:
+    valid_from: Optional[str]                # ISO-8601
+    valid_until: Optional[str]               # ISO-8601
+    expiry_policy: ExpiryPolicy = ExpiryPolicy.DECAY
+```
+
+Regeln für ValidityWindow:
+
+- Wenn `valid_from` und `valid_until` gesetzt sind, muss `valid_until` nach `valid_from` liegen.
+- `expiry_policy = DECAY` bedeutet: Wissen zerfällt über Zeit.
+- `expiry_policy = EXPIRE` bedeutet: Wissen wird nach `valid_until` ungültig.
+- `expiry_policy = REVIEW_REQUIRED` bedeutet: Wissen muss nach Ablauf geprüft werden.
+
+---
+
+### §6.10.3 ReproducibilityContext
+
+```python
+ReproducibilityContext:
+    reproducibility_id: str
+    artifact_refs: list[str] = []
+    environment_ref: Optional[str] = None
+    code_version: Optional[str] = None
+    dataset_version: Optional[str] = None
+    seed_list: list[int] = []
+    calibration_ref: Optional[str] = None
+    measurement_protocol: Optional[str] = None
+    batch_id: Optional[str] = None
+    created_at: str
+```
+
+Regeln für ReproducibilityContext:
+
+- `artifact_refs` kann Datensätze, Modelle, Dateien, Proben oder Messreihen referenzieren.
+- `environment_ref` kann eine Umgebung, Maschine, Runtime oder Laboraufbau referenzieren.
+- `seed_list` ist besonders für ML- und Simulations-Evidenz relevant.
+- `calibration_ref` ist besonders für physikalische Messungen relevant.
+- `batch_id` ist besonders für biologische und chemische Chargen relevant.
+
+---
+
+### §6.10.4 TypedDimension
+
+```python
+TypedDimension:
+    dimension_id: str
+    display_name: str
+    domain: str
+    value_type: DimensionValueType
+    unit: Optional[str] = None
+    value_range: Optional[tuple[float, float]] = None
+    categories: Optional[list[str]] = None
+    ordinal_levels: Optional[list[str]] = None
+    parent_dimension: Optional[str] = None
+    approved: bool = False
+    onboarding_request_ref: Optional[str] = None
+    approved_by: Optional[str] = None
+    approved_at: Optional[str] = None
+    created_at: str
+    updated_at: str
+```
+
+Regeln für TypedDimension:
+
+- `dimension_id` muss eindeutig sein.
+- Wenn `value_type = CONTINUOUS` oder `DISCRETE`, sollte `value_range` gesetzt sein.
+- Wenn `value_type = CATEGORICAL`, sollte `categories` gesetzt sein.
+- Wenn `value_type = ORDINAL`, sollte `ordinal_levels` gesetzt sein.
+- Wenn `approved = false`, darf die Dimension nicht für physische Exploration verwendet werden.
+- Neue Dimensionen erfordern weiterhin die bestehenden Freigabe- und Approval-Regeln.
+
+---
+
+### §6.10.5 ConditionalRule
+
+```python
+ConditionalRule:
+    rule_id: str
+    if_dimension: str
+    if_value: Any
+    then_continuous_bounds: dict[str, tuple[float, float]] = {}
+    then_categorical_constraints: dict[str, list[str]] = {}
+```
+
+Regeln für ConditionalRule:
+
+- `if_dimension` referenziert eine Dimension.
+- `if_value` ist der Wert, der die Bedingung auslöst.
+- `then_continuous_bounds` definiert erlaubte kontinuierliche Bereiche unter dieser Bedingung.
+- `then_categorical_constraints` definiert erlaubte kategorische Werte unter dieser Bedingung.
+
+---
+
+### §6.10.6 ZoneGeometry
+
+```python
+ZoneGeometry:
+    continuous_bounds: dict[str, tuple[float, float]] = {}
+    categorical_constraints: dict[str, list[str]] = {}
+    conditional_rules: list[ConditionalRule] = []
+```
+
+Regeln für ZoneGeometry:
+
+- `continuous_bounds` enthält kontinuierliche Dimensionsbereiche.
+- `categorical_constraints` enthält erlaubte kategorische Werte.
+- `conditional_rules` enthalten bedingte Einschränkungen.
+- Eine Zone ist nur dann gültig, wenn ihre Geometrie konsistent ist.
+- Leere Geometrie ist nicht automatisch eine gültige Forschungsregion.
+
+---
+
+### §6.10.7 AtlasZoneSummary
+
+```python
+AtlasZoneSummary:
+    zone_id: str
+    parent_zone_id: Optional[str] = None
+    dimension_refs: list[str] = []
+    geometry: ZoneGeometry
+    health_state: ZoneHealthState = ZoneHealthState.UNEXPLORED
+    quarantine_mode: bool = False
+    full_rebuild_required: bool = False
+    locked: bool = False
+    locked_reason: Optional[str] = None
+    coverage_score: float = 0.0
+    evidence_mass: float = 0.0
+    support_energy: float = 0.0
+    conflict_energy: float = 0.0
+    diagnostic_energy: float = 0.0
+    policy_energy: float = 0.0
+    fracture_score: Optional[float] = None
+    support_confidence: float = 0.0
+    uncertainty_score: float = 1.0
+    crystallization_progress: float = 0.0
+    diagnostic_budget: int = 0
+    cluster_id: Optional[str] = None
+    atlas_version: str
+    created_at: str
+    last_modified: str
+```
+
+Regeln für AtlasZoneSummary:
+
+- `fracture_score` darf `None` sein, wenn `evidence_mass` unter der minimalen Evidenzschwelle liegt.
+- Wenn `evidence_mass` zu niedrig ist, muss `health_state` auf `UNEXPLORED` oder `EXPLORED_INCONCLUSIVE` gesetzt werden.
+- `locked = true` überschreibt Frontier-Freigaben.
+- `quarantine_mode = true` erlaubt nur diagnostische Aktionen, sofern Budget und Gate-Modus passen.
+- `full_rebuild_required = true` erfordert einen atomaren Neuaufbau oder kontrollierte Eskalation.
+- `coverage_score`, `support_energy`, `conflict_energy`, `diagnostic_energy` und `policy_energy` müssen `>= 0` sein.
+- `fracture_score`, falls gesetzt, muss im Bereich `[0.0, 1.0]` liegen.
+- `support_confidence`, falls berechnet, muss im Bereich `[0.0, 1.0]` liegen.
+- `uncertainty_score` muss im Bereich `[0.0, 1.0]` liegen.
+
+---
+
+### §6.10.8 AtlasNode
+
+```python
+AtlasNode:
+    node_id: str
+    node_type: NodeType
+    zone_ref: str
+    position: dict[str, Any] = {}
+    topic_refs: list[str] = []
+
+    # Energiekonten
+    support_energy: float = 0.0
+    conflict_energy: float = 0.0
+    diagnostic_energy: float = 0.0
+    coverage_energy: float = 0.0
+    evidence_mass: float = 0.0
+
+    # Scores
+    support_confidence: float = 0.0
+    fracture_score: Optional[float] = None
+    uncertainty_score: float = 1.0
+    crystallization_progress: float = 0.0
+
+    # Kristallisation
+    crystallized: bool = False
+    crystallized_at: Optional[str] = None
+    ist_diagnostic: bool = False
+    cluster_integration: bool = True
+
+    # Beziehungen
+    edge_ids: list[str] = []
+
+    # Herkunft und Reproduzierbarkeit
+    source_package_ids: list[str] = []
+    reproducibility_ref: Optional[str] = None
+    validity: Optional[ValidityWindow] = None
+
+    # Metadaten
+    created_at: str
+    updated_at: str
+```
+
+Regeln für AtlasNode:
+
+- `node_id` muss eindeutig sein.
+- `position` darf kontinuierliche, diskrete, kategorische oder ordinale Werte enthalten.
+- `evidence_mass` ist die Summe aus `support_energy` und `conflict_energy`.
+- `fracture_score` darf `None` sein, wenn zu wenig Evidenz vorhanden ist.
+- Wenn `node_type = CRYSTAL`, sollte `crystallized = true` sein.
+- Wenn `ist_diagnostic = true`, sollte `cluster_integration = false` sein.
+- Diagnostic-Knoten dürfen nicht automatisch in normale Cluster integriert werden.
+
+---
+
+### §6.10.9 AtlasEdge
+
+```python
+AtlasEdge:
+    edge_id: str
+    source_node_id: str
+    target_node_id: str
+    edge_type: EdgeType
+    weight: float = 1.0
+    evidence_refs: list[str] = []
+    created_at: str
+    updated_at: str
+```
+
+Regeln für AtlasEdge:
+
+- `edge_id` muss eindeutig sein.
+- `source_node_id` und `target_node_id` müssen existierende Atlas-Knoten referenzieren.
+- `weight` muss `>= 0` sein.
+- `evidence_refs` sollen die Evidenz referenzieren, aus der die Kante abgeleitet wurde.
+- `EXPLAINS`-Kanten dürfen nur mit nachvollziehbarer DiagnosticResolution oder Governance-Freigabe erzeugt werden.
+
+---
+
+### §6.10.10 ObjectiveFamily
+
+```python
+MetricDefinition:
+    metric_id: str
+    display_name: Optional[str] = None
+    direction: MetricDirection
+    weight: float = 1.0
+    tolerance: Optional[float] = None
+    unit: Optional[str] = None
+
+
+MetricConstraint:
+    metric_id: str
+    operator: ConstraintOperator
+    value: Optional[float] = None
+    range: Optional[tuple[float, float]] = None
+
+
+ObjectiveFamily:
+    objective_family_id: str
+    name: str
+    metrics: list[MetricDefinition] = []
+    constraints: list[MetricConstraint] = []
+    priority_mode: PriorityMode = PriorityMode.WEIGHTED_SUM
+    created_at: str
+    updated_at: str
+```
+
+Regeln für ObjectiveFamily:
+
+- `objective_family_id` muss eindeutig sein.
+- Wenn `priority_mode = PARETO`, dürfen mehrere Zielgrößen gleichrangig behandelt werden.
+- Wenn `priority_mode = WEIGHTED_SUM`, sollten Gewichte in `MetricDefinition.weight` gesetzt sein.
+- Wenn `priority_mode = LEXICOGRAPHIC`, ist die Reihenfolge der Metriken relevant.
+- Zielkonflikte zwischen Metriken sind keine automatischen Widersprüche im Atlas.
+
+---
+
+### §6.10.11 DiagnosticResolution
+
+```python
+DiagnosticResolution:
+    resolution_id: str
+    zone_ref: str
+    waypoint_ref: Optional[str] = None
+    outcome: DiagnosticOutcomeType
+    affected_node_ids: list[str] = []
+    affected_evidence_ids: list[str] = []
+    uncertainty_reduction: float = 0.0
+    recommended_action: str
+    review_authority: str
+    review_timestamp: str
+    created_at: str
+```
+
+Regeln für DiagnosticResolution:
+
+- `resolution_id` muss eindeutig sein.
+- `outcome` muss einem `DiagnosticOutcomeType` entsprechen.
+- `EXPLAINS_CONTRADICTION` und `RESOLVES_CONTRADICTION` erfordern eine nachvollziehbare `review_authority`.
+- `review_authority` darf keine LLM-Endentscheidung sein.
+- DiagnosticResolution darf keine Evidenz löschen.
+- DiagnosticResolution darf nur Gewichte, Zustände oder Kanten ändern, nicht die Append-Only-Historie.
+- `uncertainty_reduction` muss im Bereich `[0.0, 1.0]` liegen.
+
+---
+
+### §6.10.12 SafetyConstraint
+
+```python
+SafetyConstraint:
+    constraint_id: str
+    zone_ref: Optional[str] = None
+    dimension_ref: Optional[str] = None
+    node_ref: Optional[str] = None
+    hazard_class: str
+    severity: SeverityLevel
+    source_event_ref: str
+    active: bool = True
+    requires_manual_clearance: bool = True
+    cleared_by: Optional[str] = None
+    cleared_at: Optional[str] = None
+    created_at: str
+```
+
+Regeln für SafetyConstraint:
+
+- `constraint_id` muss eindeutig sein.
+- Wenn `active = true`, darf keine normale Frontier freigegeben werden.
+- SafetyConstraints unterliegen keinem automatischen Decay.
+- `requires_manual_clearance = true` erfordert eine explizite Freigabe.
+- `cleared_by` und `cleared_at` dürfen nur bei tatsächlicher Aufhebung gesetzt werden.
+- SafetyConstraints ersetzen keine ESTOP- oder Interlock-Regeln.
+
+---
+
+### §6.10.13 ExclusionConstraint
+
+```python
+ExclusionConstraint:
+    constraint_id: str
+    scope: ScopeType
+    zone_ref: Optional[str] = None
+    node_ref: Optional[str] = None
+    geometry: Optional[ZoneGeometry] = None
+    reason: str
+    evidence_refs: list[str] = []
+    hard_limit: bool = True
+    created_at: str
+```
+
+Regeln für ExclusionConstraint:
+
+- `constraint_id` muss eindeutig sein.
+- `hard_limit = true` bedeutet: Die Region darf nicht normal exploriert werden.
+- `hard_limit = false` bedeutet: Die Region ist nur mit erhöhter Vorsicht oder Diagnostik zu betreten.
+- `reason` muss nachvollziehbar sein.
+- `evidence_refs` sollen die Herkunft der Einschränkung belegen.
+
+---
+
+### §6.10.14 FrontierCandidate
+
+```python
+FrontierRationale:
+    why_here: str
+    supporting_evidence: list[str] = []
+    contradicting_evidence: list[str] = []
+    expected_outcome: str
+    risk_notes: list[str] = []
+
+
+ResourceContext:
+    estimated_time_s: Optional[float] = None
+    estimated_reagent_cost: Optional[float] = None
+    estimated_compute_cost: Optional[float] = None
+    estimated_energy_cost: Optional[float] = None
+    required_capabilities: list[str] = []
+    lease_requirements: list[str] = []
+    slot_requirements: list[str] = []
+
+
+FrontierCandidate:
+    candidate_id: str
+    frontier_type: FrontierType
+    zone_ref: str
+    geometry: ZoneGeometry
+    topic_refs: list[str] = []
+
+    # Scores
+    frontier_score: float
+    novelty_score: float
+    promise_score: float
+    information_gain_score: float
+    connectivity_score: float
+    cluster_relevance_score: float
+    uncertainty_score: float
+    risk_score: float
+
+    # Ressourcen
+    resource_context: ResourceContext
+
+    # Sicherheit
+    safety_status: SafetyStatus
+    active_safety_constraints: list[str] = []
+
+    # Empfehlung
+    suggested_objective_type: ObjectiveType
+    suggested_gate_mode: GateMode
+    required_capabilities: list[str] = []
+
+    # Begründung
+    rationale: FrontierRationale
+
+    # Lebenszyklus
+    expires_at: Optional[str] = None
+    created_at: str
+```
+
+Regeln für FrontierCandidate:
+
+- `candidate_id` muss eindeutig sein.
+- `frontier_score`, `novelty_score`, `promise_score`, `information_gain_score`, `connectivity_score`, `cluster_relevance_score`, `uncertainty_score` und `risk_score` müssen im Bereich `[0.0, 1.0]` liegen.
+- Wenn `safety_status = BLOCKED`, darf der FrontierCandidate nicht für normale Exploration verwendet werden.
+- Wenn aktive SafetyConstraints existieren, muss `safety_status` mindestens `RESTRICTED` sein.
+- Bei aktiven harten SafetyConstraints muss `safety_status = BLOCKED` sein.
+- `rationale` muss maschinenlesbar und nachvollziehbar sein.
+- FrontierCandidates sind Empfehlungen, keine Ausführungsfreigaben.
+
+---
+
+### §6.10.15 DiagnosticWaypoint
+
+```python
+DiagnosticWaypoint:
+    waypoint_id: str
+    source_idee: str
+    zone_ref: str
+    geometry: ZoneGeometry
+    intent: ObjectiveType = ObjectiveType.DIAGNOSE
+    required_gate_mode: GateMode = GateMode.FRACTURE_DIAGNOSIS
+    budget_cost: int = 1
+    atlas_version_ref: str
+    frontier_candidate_ref: Optional[str] = None
+    expectation_ref: Optional[str] = None
+    status: WaypointStatus = WaypointStatus.PLATZIERT
+    created_at: str
+```
+
+Regeln für DiagnosticWaypoint:
+
+- `waypoint_id` muss eindeutig sein.
+- `intent` muss `DIAGNOSE` sein.
+- `required_gate_mode` muss `FRACTURE_DIAGNOSIS` sein.
+- `budget_cost` muss `>= 1` sein.
+- DiagnosticWaypoints dürfen nur platziert werden, wenn Diagnose-Budget vorhanden ist.
+
+---
+
+### §6.10.16 ResearchTopic
+
+```python
+StopCondition:
+    condition_id: str
+    metric: StopMetric
+    operator: StopOperator
+    threshold: float
+    window_cycles: Optional[int] = None
+
+
+ResearchTopic:
+    topic_id: str
+    name: str
+    description: Optional[str] = None
+    priority: float = 0.5
+    parent_goal: Optional[str] = None
+    related_dimensions: list[str] = []
+    related_zones: list[str] = []
+    related_clusters: list[str] = []
+    objective_family_ref: Optional[str] = None
+    budget_class: BudgetClass = BudgetClass.MEDIUM
+    state: ResearchTopicState = ResearchTopicState.PROPOSED
+    stop_conditions: list[StopCondition] = []
+    created_at: str
+    updated_at: str
+```
+
+Regeln für ResearchTopic:
+
+- `topic_id` muss eindeutig sein.
+- `priority` muss im Bereich `[0.0, 1.0]` liegen.
+- `state` muss einem `ResearchTopicState` entsprechen.
+- `stop_conditions` definieren, wann ein Thema als saturiert oder blockiert gilt.
+- Ein Thema darf nicht eigenmächtig durch eine LLM als aktiv oder saturiert gesetzt werden.
+
+---
+
+### §6.10.17 ExplorationPolicy
+
+```python
+FrontierScoreWeights:
+    novelty: float = 0.20
+    promise: float = 0.25
+    information_gain: float = 0.20
+    connectivity: float = 0.10
+    cluster_relevance: float = 0.10
+    cost: float = 0.10
+    risk: float = 0.05
+
+
+ExplorationPolicy:
+    policy_id: str
+    exploitation_weight: float = 0.60
+    exploration_weight: float = 0.25
+    diagnostic_weight: float = 0.15
+    max_frontiers_per_cycle: int = 10
+    topic_commitment_cycles: int = 3
+    cooldown_after_failure_cycles: int = 1
+    budget_allocation: dict[str, float] = {}
+    score_weights: Optional[FrontierScoreWeights] = None
+    set_by: str
+    created_at: str
+    updated_at: str
+```
+
+Regeln für ExplorationPolicy:
+
+- `policy_id` muss eindeutig sein.
+- `exploitation_weight`, `exploration_weight` und `diagnostic_weight` sollten zusammen ungefähr `1.0` ergeben.
+- `max_frontiers_per_cycle` muss `>= 0` sein.
+- `topic_commitment_cycles` muss `>= 0` sein.
+- `cooldown_after_failure_cycles` muss `>= 0` sein.
+- Die ExplorationPolicy wird durch Kanzler, Königin oder einen autorisierten Governance-Prozess gesetzt.
+- Die ExplorationPolicy darf nicht durch eine LLM final entschieden werden.
+
+---
+
+### §6.10.18 AtlasHybridConfig
+
+```python
+AtlasHybridConfig:
+    min_evidence_mass: float = 0.20
+    epsilon: float = 0.001
+    k_conf: float = 1.0
+    k_evidence: float = 2.0
+
+    # Decay
+    signal_decay_lambda: float = 0.08
+    signal_ttl_cycles: int = 50
+
+    # Zone Health
+    degraded_threshold: float = 0.30
+    quarantine_threshold: float = 0.60
+    full_rebuild_threshold: float = 0.85
+    healthy_support_confidence: float = 0.70
+
+    # Kristallisation
+    crystallization_threshold: float = 1.0
+    min_confirmations: int = 3
+    interrupt_window: int = 5
+    max_fracture_for_crystallization: float = 0.30
+
+    # Diagnostik
+    diagnostic_budget_default: int = 3
+
+    # Frontier
+    frontier_activation_threshold: float = 0.40
+    max_frontier_candidates_per_zone: int = 5
+```
+
+Regeln für AtlasHybridConfig:
+
+- Alle Schwellwerte müssen deterministisch geprüft werden.
+- `epsilon` muss `> 0` sein.
+- `min_evidence_mass` muss `>= 0` sein.
+- `degraded_threshold < quarantine_threshold < full_rebuild_threshold` muss gelten.
+- `min_confirmations` muss `>= 1` sein.
+- `interrupt_window` muss `>= 1` sein.
+- `diagnostic_budget_default` muss `>= 0` sein.
+- Diese Konfiguration ersetzt keine Gate-, Lease- oder Sicherheitsregeln.
+
+---
+
+# §7 Zustandsmaschinen
+
+## §7.1 Questor-Zustandsmaschine (11 Zustände)
 
 | Zustand | Bedeutung | Dauer |
-| :--- | :--- | :--- |
-| `IDLE` | Wartet auf Envelope | Unbegrenzt |
-| `RECEIVING` | Envelope empfangen, wird geprüft | Millisekunden |
-| `VALIDATING` | Formale Validierung | Millisekunden |
-| `PLANNING` | Loop-Auswahl | Sekunden |
-| `EXECUTING` | Loop wird ausgeführt | Sekunden bis Tage |
-| `EVALUATING` | Ergebnis prüfen | Sekunden |
-| `WAITING_FOR_RELEASE` | Manuelle Freigabe nötig | Stunden bis Tage |
-| `SAFE_HOLD` | Prozess sicher angehalten | Stunden |
-| `RECOVERING` | Nach Crash: Zustand klären | Sekunden bis Minuten |
-| `FINALIZING` | Ergebnis wird gebaut | Millisekunden |
-| `DONE` | Ergebnis übergeben | Terminal |
+| --- | --- | --- |
+| IDLE | Wartet auf Envelope | Unbegrenzt |
+| RECEIVING | Envelope empfangen, wird geprüft | Millisekunden |
+| VALIDATING | Formale Validierung | Millisekunden |
+| PLANNING | Loop-Auswahl | Sekunden |
+| EXECUTING | Loop wird ausgeführt | Sekunden bis Tage |
+| EVALUATING | Ergebnis prüfen | Sekunden |
+| WAITING_FOR_RELEASE | Manuelle Freigabe nötig | Stunden bis Tage |
+| SAFE_HOLD | Prozess sicher angehalten | Stunden |
+| RECOVERING | Nach Crash: Zustand klären | Sekunden bis Minuten |
+| FINALIZING | Ergebnis wird gebaut | Millisekunden |
+| DONE | Ergebnis übergeben | Terminal |
 
-**Übergangstabelle (kritische Übergänge):**
+Übergangstabelle (kritische Übergänge):
 
 | Von | Nach | Auslöser |
-| :--- | :--- | :--- |
-| `IDLE` | `RECEIVING` | Envelope empfangen |
-| `RECEIVING` | `VALIDATING` | Envelope akzeptiert |
-| `RECEIVING` | `FINALIZING` | `DIRECT_PACKAGE_FORBIDDEN` |
-| `VALIDATING` | `PLANNING` | Validierung bestanden |
-| `VALIDATING` | `FINALIZING` | `PACKAGE_INVALID` |
-| `PLANNING` | `EXECUTING` | Plan erstellt, PolicyEvaluator GO |
-| `PLANNING` | `FINALIZING` | `NO_APPLICABLE_TEMPLATE` / `ABORT_IF_UNCLEAR` |
-| `EXECUTING` | `EVALUATING` | Alle Steps ausgeführt |
-| `EXECUTING` | `FINALIZING` | ESTOP / Interlock / Budget erschöpft |
-| `EXECUTING` | `WAITING_FOR_RELEASE` | Stufe braucht Freigabe |
-| `EXECUTING` | `SAFE_HOLD` | Lease-Expiry mit SAFE_HOLD-Policy |
-| `EXECUTING` | `RECOVERING` | Crash / OOM |
-| `EVALUATING` | `FINALIZING` | Ziel erreicht / nicht erreichbar / Budget erschöpft |
-| `EVALUATING` | `PLANNING` | Ziel nicht erreicht + Budget übrig |
-| `WAITING_FOR_RELEASE` | `EXECUTING` | Freigabe erteilt |
-| `WAITING_FOR_RELEASE` | `FINALIZING` | Freigabe verweigert / Timeout |
-| `SAFE_HOLD` | `RECOVERING` | Questor startet neu |
-| `SAFE_HOLD` | `FINALIZING` | Abbruch gewünscht |
-| `RECOVERING` | `EXECUTING` | Zustand sicher, Resume möglich |
-| `RECOVERING` | `FINALIZING` | `RECOVERY_UNSAFE` |
-| `FINALIZING` | `DONE` | Ergebnis übergeben |
-| `DONE` | `IDLE` | Immer |
+| --- | --- | --- |
+| IDLE | RECEIVING | Envelope empfangen |
+| RECEIVING | VALIDATING | Envelope akzeptiert |
+| RECEIVING | FINALIZING | DIRECT_PACKAGE_FORBIDDEN |
+| VALIDATING | PLANNING | Validierung bestanden |
+| VALIDATING | FINALIZING | PACKAGE_INVALID |
+| PLANNING | EXECUTING | Plan erstellt, PolicyEvaluator GO |
+| PLANNING | FINALIZING | NO_APPLICABLE_TEMPLATE / ABORT_IF_UNCLEAR |
+| EXECUTING | EVALUATING | Alle Steps ausgeführt |
+| EXECUTING | FINALIZING | ESTOP / Interlock / Budget erschöpft |
+| EXECUTING | WAITING_FOR_RELEASE | Stufe braucht Freigabe |
+| EXECUTING | SAFE_HOLD | Lease-Expiry mit SAFE_HOLD-Policy |
+| EXECUTING | RECOVERING | Crash / OOM |
+| EVALUATING | FINALIZING | Ziel erreicht / nicht erreichbar / Budget erschöpft |
+| EVALUATING | PLANNING | Ziel nicht erreicht + Budget übrig |
+| WAITING_FOR_RELEASE | EXECUTING | Freigabe erteilt |
+| WAITING_FOR_RELEASE | FINALIZING | Freigabe verweigert / Timeout |
+| SAFE_HOLD | RECOVERING | Questor startet neu |
+| SAFE_HOLD | FINALIZING | Abbruch gewünscht |
+| RECOVERING | EXECUTING | Zustand sicher, Resume möglich |
+| RECOVERING | FINALIZING | RECOVERY_UNSAFE |
+| FINALIZING | DONE | Ergebnis übergeben |
+| DONE | IDLE | Immer |
 
-**Invarianten:**
-1. Questor ist immer in genau EINEM Zustand
-2. `FINALIZING` erzeugt IMMER ein vollständiges `questor_ergebnis_paket`
-3. `DONE` → `IDLE` ist der einzige Rückkehrpfad
-4. `EXECUTING` ist der einzige Zustand mit HAL-Kommandos
-5. `RECOVERING` darf nur `reconcile_*` aufrufen
+Invarianten:
 
-### §7.2 HAL-Slot-Zustandsmaschine
+- Questor ist immer in genau EINEM Zustand
+- `FINALIZING` erzeugt IMMER ein vollständiges `questor_ergebnis_paket`
+- `DONE` → `IDLE` ist der einzige Rückkehrpfad
+- `EXECUTING` ist der einzige Zustand mit HAL-Kommandos
+- `RECOVERING` darf nur `reconcile_*` aufrufen
+
+---
+
+## §7.2 HAL-Slot-Zustandsmaschine
 
 | Zustand | Bedeutung |
-| :--- | :--- |
-| `FREE` | Slot verfügbar |
-| `RESERVED` | Slot reserviert |
-| `ACTIVE` | Slot aktiv |
-| `ERROR` | Fehlerzustand |
-| `ESTOP_SUSPENDED` | ESTOP aktiv |
-| `INTERLOCKED` | Hardware-Interlock aktiv |
-| `MAINTENANCE` | Wartung |
-| `OFFLINE` | Nicht erreichbar |
+| --- | --- |
+| FREE | Slot verfügbar |
+| RESERVED | Slot reserviert |
+| ACTIVE | Slot aktiv |
+| ERROR | Fehlerzustand |
+| ESTOP_SUSPENDED | ESTOP aktiv |
+| INTERLOCKED | Hardware-Interlock aktiv |
+| MAINTENANCE | Wartung |
+| OFFLINE | Nicht erreichbar |
 
-**Harte Regel für `INTERLOCKED`:**
+Harte Regel für `INTERLOCKED`:
+
 - Kein `execute_command()`
 - Keine automatische Reconciliation auf `FREE`
 - `safe_state_verified` muss `true` sein
 - `physical_reset_required` muss erfüllt sein
 
-### §7.3 HAL-Prozess-Zustandsmaschine
+---
+
+## §7.3 HAL-Prozess-Zustandsmaschine
 
 | Zustand | Bedeutung |
-| :--- | :--- |
-| `PENDING` | Prozess wartet |
-| `RUNNING` | Prozess läuft |
-| `PAUSED` | Prozess pausiert |
-| `SAFE_HOLD` | Prozess sicher angehalten |
-| `WAITING_FOR_RELEASE` | Wartet auf manuelle Freigabe |
-| `COMPLETED` | Erfolgreich abgeschlossen |
-| `ABORTED` | Abgebrochen |
-| `FAULT` | Fehler |
-| `UNKNOWN` | Zustand unklar (nach Crash) |
+| --- | --- |
+| PENDING | Prozess wartet |
+| RUNNING | Prozess läuft |
+| PAUSED | Prozess pausiert |
+| SAFE_HOLD | Prozess sicher angehalten |
+| WAITING_FOR_RELEASE | Wartet auf manuelle Freigabe |
+| COMPLETED | Erfolgreich abgeschlossen |
+| ABORTED | Abgebrochen |
+| FAULT | Fehler |
+| UNKNOWN | Zustand unklar (nach Crash) |
 
-### §7.4 Queue-Paket-Lebenszyklus
+---
 
-```
+## §7.4 Queue-Paket-Lebenszyklus
+
+```text
 DISPATCH → PENDING → PROCESSING → COMPLETED / FAILED → RECEIVED → ARCHIVED → CLEANED
                   ↘ DELETED (nur aus PENDING möglich)
 ```
 
-### §7.5 Shutdown-Phasen
+---
 
-```
+## §7.5 Shutdown-Phasen
+
+```text
 SIGNAL_RECEIVED → DRAINING → FINALIZING → TERMINATED
 ```
 
-### §7.6 Health-Monitoring-Zustände
+---
+
+## §7.6 Health-Monitoring-Zustände
 
 | Zustand | Bedeutung |
-| :--- | :--- |
-| `HEALTHY` | Normal |
-| `DEGRADED` | Einschränkungen |
-| `UNHEALTHY` | Nicht korrekt |
-| `DEAD` | Nicht erreichbar |
+| --- | --- |
+| HEALTHY | Normal |
+| DEGRADED | Einschränkungen |
+| UNHEALTHY | Nicht korrekt |
+| DEAD | Nicht erreichbar |
 
 ---
 
-## §8 Idempotenz-Kanon
+# §8 Idempotenz-Kanon
 
-### §8.1 Paket-Idempotenz
+## §8.1 Paket-Idempotenz
 
-```
+```python
 idempotency_key = package_id + ":" + zyklus_id + ":" + attempt_id
 ```
 
-**Regeln:**
+Regeln:
+
 - `package_id` und `zyklus_id`: `^[A-Za-z0-9._-]{1,128}$`
-- `attempt_id`: Integer, 0–999999, keine führenden Nullen
+- `attempt_id`: Integer, `0–999999`, keine führenden Nullen
 - Keine Whitespace
 - Maximale Länge: 264 Zeichen
 
-**Testvektoren (gültig):**
-```
+Testvektoren (gültig):
+
+```text
 pkg-001:zyklus-014:0
 pkg-001:zyklus-014:2
 abc.def_1:zyklus-99:10
 ```
 
-**Testvektoren (ungültig):**
-```
+Testvektoren (ungültig):
+
+```text
 pkg 001:zyklus-014:2        ← Whitespace
 pkg/001:zyklus-014:2        ← Ungültiges Zeichen
 pkg-001:zyklus-014:02       ← Führende Null
@@ -1046,14 +1868,18 @@ pkg-001:zyklus-014:         ← Leer
 pkg-001:zyklus-014:1000000  ← Außerhalb Bereich
 ```
 
-### §8.2 HAL-Kommando-Idempotenz
+---
 
-```
+## §8.2 HAL-Kommando-Idempotenz
+
+```python
 hal_idempotency_key = command_id:lease_ref:slot_id
 hal_process_idempotency_key = process_id:lease_ref:slot_id
 ```
 
-### §8.3 Deterministische ID-Erzeugung
+---
+
+## §8.3 Deterministische ID-Erzeugung
 
 ```python
 command_id  = f"cmd-{package_id}-{step_id}-{attempt_id}"
@@ -1063,19 +1889,21 @@ questor_instance_id = f"qi-{package_id}-{sha256(f'{package_id}:{zyklus_id}:{atte
 
 ---
 
-## §9 Fehlermodell
+# §9 Fehlermodell
 
-### §9.1 Fehlerklassen
+## §9.1 Fehlerklassen
 
 | Klasse | Bedeutung | Wissenschaftliches Signal? |
-| :--- | :--- | :--- |
-| `OPERATIONAL` | Prozessfehler, Crash, Timeout, Lease-Problem | **Nein** |
-| `SCIENTIFIC` | Wissenschaftliche Zielverfehlung | Ja, als Vorschlag |
-| `SAFETY` | Sicherheitsverletzung, ESTOP | Ja, mit Sicherheitsprüfung |
+| --- | --- | --- |
+| OPERATIONAL | Prozessfehler, Crash, Timeout, Lease-Problem | Nein |
+| SCIENTIFIC | Wissenschaftliche Zielverfehlung | Ja, als Vorschlag |
+| SAFETY | Sicherheitsverletzung, ESTOP | Ja, mit Sicherheitsprüfung |
 
-### §9.2 Operationale Fehler (HAL)
+---
 
-```
+## §9.2 Operationale Fehler (HAL)
+
+```text
 LEASE_INVALID, LEASE_EXPIRED, LEASE_REVOKED, SLOT_BUSY, SLOT_UNAVAILABLE,
 ZONE_LOCK_UNAVAILABLE, COMMAND_TIMEOUT, PROCESS_TIMEOUT, DEVICE_UNAVAILABLE,
 OOM, COMPUTE_OOM, CUDA_OOM, GPU_LOST, SCHEDULER_REJECTED, NODE_UNAVAILABLE,
@@ -1086,36 +1914,40 @@ PHYSICAL_EXECUTION_FORBIDDEN, COMPUTE_EXECUTION_FORBIDDEN,
 RECOVERY_UNSAFE, RESUME_TOKEN_INVALID, STAGE_RELEASE_DENIED
 ```
 
-### §9.3 Sicherheitsfehler (HAL)
+---
 
-```
+## §9.3 Sicherheitsfehler (HAL)
+
+```text
 ESTOP_RECEIVED, HARDWARE_INTERLOCK_TRIGGERED, EXTERNAL_SAFETY_CHAIN_TRIGGERED,
 SAFETY_LIMIT_VIOLATION, UNSAFE_SLOT_STATE, UNSAFE_ZONE_STATE,
 PHYSICAL_INTERLOCK_TRIGGERED, SAFETY_RESET_REQUIRED
 ```
 
-### §9.4 Abbruchgründe (Questor)
+---
+
+## §9.4 Abbruchgründe (Questor)
 
 | Abbruchgrund | Klasse |
-| :--- | :--- |
-| `PACKAGE_INVALID` | OPERATIONAL |
-| `DIRECT_PACKAGE_FORBIDDEN` | OPERATIONAL |
-| `GATE_MISSING` | OPERATIONAL |
-| `NO_APPLICABLE_TEMPLATE` | OPERATIONAL |
-| `ABORT_IF_UNCLEAR` | OPERATIONAL |
-| `LEASE_QUEUED_TIMEOUT` | OPERATIONAL |
-| `ROUTING_LOOP_TIMEOUT` | OPERATIONAL |
-| `BUDGET_EXHAUSTED` | OPERATIONAL |
-| `TARGET_NOT_REACHED` | SCIENTIFIC |
-| `TARGET_NOT_REACHABLE` | SCIENTIFIC |
-| `ESTOP_RECEIVED` | SAFETY |
-| `HARDWARE_INTERLOCK_TRIGGERED` | SAFETY |
-| `GRACEFUL_SHUTDOWN` | OPERATIONAL |
-| `RECOVERY_UNSAFE` | OPERATIONAL |
+| --- | --- |
+| PACKAGE_INVALID | OPERATIONAL |
+| DIRECT_PACKAGE_FORBIDDEN | OPERATIONAL |
+| GATE_MISSING | OPERATIONAL |
+| NO_APPLICABLE_TEMPLATE | OPERATIONAL |
+| ABORT_IF_UNCLEAR | OPERATIONAL |
+| LEASE_QUEUED_TIMEOUT | OPERATIONAL |
+| ROUTING_LOOP_TIMEOUT | OPERATIONAL |
+| BUDGET_EXHAUSTED | OPERATIONAL |
+| TARGET_NOT_REACHED | SCIENTIFIC |
+| TARGET_NOT_REACHABLE | SCIENTIFIC |
+| ESTOP_RECEIVED | SAFETY |
+| HARDWARE_INTERLOCK_TRIGGERED | SAFETY |
+| GRACEFUL_SHUTDOWN | OPERATIONAL |
+| RECOVERY_UNSAFE | OPERATIONAL |
 
 ---
 
-## §10 Enums
+# §10 Enums
 
 ```python
 class ObjectiveType(str, Enum):
@@ -1126,10 +1958,12 @@ class ObjectiveType(str, Enum):
     SIMULATE_ONLY = "SIMULATE_ONLY"
     CLARIFY = "CLARIFY"
 
+
 class AutonomyLevel(str, Enum):
     STRICT = "STRICT"
     GUIDED = "GUIDED"
     ADAPTIVE = "ADAPTIVE"
+
 
 class SecurityMode(str, Enum):
     NORMAL = "NORMAL"
@@ -1137,16 +1971,19 @@ class SecurityMode(str, Enum):
     DEV_SANDBOX_ONLY = "DEV_SANDBOX_ONLY"
     RECOVERY = "RECOVERY"
 
+
 class GateMode(str, Enum):
     NORMAL = "NORMAL"
     FRACTURE_DIAGNOSIS = "FRACTURE_DIAGNOSIS"
     HIGH_RISK_OVERRIDE = "HIGH_RISK_OVERRIDE"
     SANDBOX = "SANDBOX"
 
+
 class AbbruchKlasse(str, Enum):
     OPERATIONAL = "OPERATIONAL"
     SCIENTIFIC = "SCIENTIFIC"
     SAFETY = "SAFETY"
+
 
 class StepType(str, Enum):
     HAL_COMMAND = "HAL_COMMAND"
@@ -1154,6 +1991,7 @@ class StepType(str, Enum):
     MEASURE = "MEASURE"
     WAIT = "WAIT"
     EVALUATE = "EVALUATE"
+
 
 class ProcessMode(str, Enum):
     START = "START"
@@ -1163,16 +2001,19 @@ class ProcessMode(str, Enum):
     ABORT = "ABORT"
     RELEASE_STAGE = "RELEASE_STAGE"
 
+
 class HealthStatus(str, Enum):
     HEALTHY = "HEALTHY"
     DEGRADED = "DEGRADED"
     UNHEALTHY = "UNHEALTHY"
     DEAD = "DEAD"
 
+
 class WatchdogStatus(str, Enum):
     OK = "OK"
     WARNING = "WARNING"
     CRITICAL = "CRITICAL"
+
 
 class DecisionType(str, Enum):
     OBJECTIVE_ANALYSIS = "OBJECTIVE_ANALYSIS"
@@ -1192,14 +2033,181 @@ class DecisionType(str, Enum):
     SECURITY_MODE_CHECK = "SECURITY_MODE_CHECK"
     SHUTDOWN_INITIATED = "SHUTDOWN_INITIATED"
     HEALTH_ALERT = "HEALTH_ALERT"
+
+
+# ─────────────────────────────────────────────────────────────
+# ATLAS-HYB-1.0.0 — Neue Enums
+# ─────────────────────────────────────────────────────────────
+
+class EvidenceKind(str, Enum):
+    CONFIRMATION = "CONFIRMATION"
+    CONTRADICTION = "CONTRADICTION"
+    EXPLORATORY_COVERAGE = "EXPLORATORY_COVERAGE"
+    DIAGNOSTIC_CLARIFICATION = "DIAGNOSTIC_CLARIFICATION"
+    NEGATIVE_KNOWLEDGE = "NEGATIVE_KNOWLEDGE"
+    POLICY_BLOCK = "POLICY_BLOCK"
+
+
+class EvidenceClass(str, Enum):
+    SIMULATION = "SIMULATION"
+    SANDBOX = "SANDBOX"
+    COMPUTE_EVALUATION = "COMPUTE_EVALUATION"
+    PHYSICAL_EXPERIMENT = "PHYSICAL_EXPERIMENT"
+    HUMAN_REVIEW = "HUMAN_REVIEW"
+
+
+class ObservationDirection(str, Enum):
+    CONFIRMS = "CONFIRMS"
+    REFUTES = "REFUTES"
+    NEUTRAL = "NEUTRAL"
+    NOT_APPLICABLE = "NOT_APPLICABLE"
+    UNKNOWN = "UNKNOWN"
+
+
+class DimensionValueType(str, Enum):
+    CONTINUOUS = "CONTINUOUS"
+    DISCRETE = "DISCRETE"
+    CATEGORICAL = "CATEGORICAL"
+    ORDINAL = "ORDINAL"
+    CONDITIONAL = "CONDITIONAL"
+
+
+class NodeType(str, Enum):
+    HYPOTHESIS = "HYPOTHESIS"
+    CRYSTAL = "CRYSTAL"
+    FRONTIER_ANCHOR = "FRONTIER_ANCHOR"
+    ZONE_ANCHOR = "ZONE_ANCHOR"
+    DIMENSION_REF = "DIMENSION_REF"
+
+
+class EdgeType(str, Enum):
+    SUPPORTS = "SUPPORTS"
+    CONTRADICTS = "CONTRADICTS"
+    EXTENDS = "EXTENDS"
+    DEPENDS_ON = "DEPENDS_ON"
+    DERIVED_FROM = "DERIVED_FROM"
+    LOCATED_IN = "LOCATED_IN"
+    MEASURES = "MEASURES"
+    EXPLAINS = "EXPLAINS"
+    DIAGNOSTIC_FOR = "DIAGNOSTIC_FOR"
+    BLOCKED_BY = "BLOCKED_BY"
+    NEAR_FRONTIER = "NEAR_FRONTIER"
+
+
+class ZoneHealthState(str, Enum):
+    UNEXPLORED = "UNEXPLORED"
+    EXPLORED_INCONCLUSIVE = "EXPLORED_INCONCLUSIVE"
+    HEALTHY = "HEALTHY"
+    DEGRADED = "DEGRADED"
+    CRITICAL = "CRITICAL"
+    LOCKED = "LOCKED"
+
+
+class DiagnosticOutcomeType(str, Enum):
+    CONFIRMS_CONTRADICTION = "CONFIRMS_CONTRADICTION"
+    EXPLAINS_CONTRADICTION = "EXPLAINS_CONTRADICTION"
+    RESOLVES_CONTRADICTION = "RESOLVES_CONTRADICTION"
+    INCONCLUSIVE = "INCONCLUSIVE"
+
+
+class FrontierType(str, Enum):
+    WEISSRAUM = "WEISSRAUM"
+    CONTRADICTION_GAP = "CONTRADICTION_GAP"
+    BRIDGE_FRONTIER = "BRIDGE_FRONTIER"
+    DIAGNOSTIC_FRONTIER = "DIAGNOSTIC_FRONTIER"
+    LOW_COST_FRONTIER = "LOW_COST_FRONTIER"
+    DEEP_UNCERTAIN = "DEEP_UNCERTAIN"
+
+
+class ResearchTopicState(str, Enum):
+    PROPOSED = "PROPOSED"
+    ACTIVE = "ACTIVE"
+    SATURATED = "SATURATED"
+    BLOCKED = "BLOCKED"
+    ARCHIVED = "ARCHIVED"
+
+
+class ExpiryPolicy(str, Enum):
+    DECAY = "DECAY"
+    EXPIRE = "EXPIRE"
+    REVIEW_REQUIRED = "REVIEW_REQUIRED"
+
+
+class SeverityLevel(str, Enum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+
+
+class SafetyStatus(str, Enum):
+    CLEAR = "CLEAR"
+    RESTRICTED = "RESTRICTED"
+    BLOCKED = "BLOCKED"
+
+
+class BudgetClass(str, Enum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+
+
+class ScopeType(str, Enum):
+    NODE = "NODE"
+    SUBZONE = "SUBZONE"
+    ZONE = "ZONE"
+    DIMENSION = "DIMENSION"
+    REGION = "REGION"
+
+
+class PriorityMode(str, Enum):
+    WEIGHTED_SUM = "WEIGHTED_SUM"
+    PARETO = "PARETO"
+    LEXICOGRAPHIC = "LEXICOGRAPHIC"
+
+
+class MetricDirection(str, Enum):
+    MAXIMIZE = "MAXIMIZE"
+    MINIMIZE = "MINIMIZE"
+
+
+class ConstraintOperator(str, Enum):
+    GE = "GE"
+    LE = "LE"
+    GT = "GT"
+    LT = "LT"
+    EQ = "EQ"
+    RANGE = "RANGE"
+
+
+class StopMetric(str, Enum):
+    FRONTIER_SCORE = "FRONTIER_SCORE"
+    EVIDENCE_MASS = "EVIDENCE_MASS"
+    FRACTURE_SCORE = "FRACTURE_SCORE"
+    BUDGET_USED = "BUDGET_USED"
+    TIME_ELAPSED = "TIME_ELAPSED"
+    SATURATION_CYCLES = "SATURATION_CYCLES"
+
+
+class StopOperator(str, Enum):
+    BELOW = "BELOW"
+    ABOVE = "ABOVE"
+    EQUALS = "EQUALS"
+    REACHED = "REACHED"
+
+
+class WaypointStatus(str, Enum):
+    PLATZIERT = "PLATZIERT"
+    AUSGEFUEHRT = "AUSGEFUEHRT"
+    VERWORFEN = "VERWORFEN"
 ```
 
 ---
 
-## §11 Korrekturen gegenüber alten Dokumenten
+# §11 Korrekturen gegenüber alten Dokumenten
 
 | # | Korrektur | Quelle (alt) | Status |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | 1 | `QuestorSpec.allowed_capabilities`: `list[Capability]` → `list[str]` | v2.4.0 §7.2, Capability-Registry §3.5 | ✅ Eingearbeitet |
 | 2 | `planning_hints` als optionales Feld in `ResearchPackage` | Sanitization P5, QuestCompass §18 | ✅ Eingearbeitet |
 | 3 | `LoopTemplate.is_recovery_template: bool` (Default: false) | Security-Mode §4.2, Q1 | ✅ Eingearbeitet |
@@ -1207,13 +2215,12 @@ class DecisionType(str, Enum):
 | 5 | `health_alert_count` / `health_restart_count` in OperationalMetrics | Health-Monitoring Q6 | ✅ Eingearbeitet |
 | 6 | `GateRecord.allowed_security_modes: list[str]` | Security-Mode §3 | ✅ Eingearbeitet |
 | 7 | `TrailPolicy` als vollständiger Vertrag | Trail-Map §3.1 | ✅ Eingearbeitet |
+| 8 | Atlas-Hybrid-Verträge als optionale Erweiterung eingeführt | ATLAS-HYB-1.0.0 | ✅ Eingearbeitet |
 
 ---
 
-## §12 Dokumentenhierarchie
+# §12 Dokumentenhierarchie
 
-Dieses Dokument steht in der Schicht `foundation/` und wird von allen
-`specs/`- und `ops/`-Dokumenten referenziert.
+Dieses Dokument steht in der Schicht `foundation/` und wird von allen `specs/`- und `ops/`-Dokumenten referenziert.
 
-**Regel:** Änderungen an Verträgen in diesem Dokument erfordern eine
-Versionsänderung und eine Überprüfung aller referenzierenden Dokumente.
+Regel: Änderungen an Verträgen in diesem Dokument erfordern eine Versionsänderung und eine Überprüfung aller referenzierenden Dokumente.
