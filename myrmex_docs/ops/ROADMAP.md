@@ -3,9 +3,9 @@
 | Feld | Wert |
 | --- | --- |
 | Dateiname | `ops/ROADMAP.md` |
-| Version | `1.1.0-atlas-hyb.1` |
-| Status | `ÄNDERUNGSANTRAG ATLAS-HYB-1.0.0 — nach Freigabe BINDEND` |
-| System | `MYRMEX v2.4.0 + Questor v0.2.3 + HAL v0.2.0` |
+| Version | **1.2.0-strat.1** |
+| Status | `ÄNDERUNGSANTRAG STRAT-1.0.0 — nach Freigabe BINDEND` |
+| System | `MYRMEX v2.4.0 + Questor v0.2.3 + HAL v0.2.0 + Gremium Strategic Layer v1.0.0` |
 | Schicht | `Layer 2 (ops/) — referenziert foundation/ und specs/` |
 | Datum | `21. August 2026` |
 
@@ -17,6 +17,20 @@ Dieses Dokument definiert die vollständige Implementierungsplanung für das Ges
 Es definiert keine neuen Verträge und keine neuen Sicherheitsregeln.
 
 **Konfliktregel:** Bei Widersprüchen gilt `CHARTER.md` > `CONTRACTS.md` > `specs/*` > `ops/VALIDATION.md` > dieses Dokument.
+
+### §0.2 Änderungsantrag STRAT-1.0.0 — Strategic-Layer-Phasen
+
+Dieser Änderungsantrag fügt die Implementierungsphasen für den Gremium Strategic Layer (Cognitive Observatory) in die Roadmap ein.
+
+Der Strategic Layer wird als eigener Phasen-Block (S1–S3) geführt, der auf den MYRMEX-Neubau-Phasen 1 bis 3 und den Atlas-Hybrid-Phasen A1–A2 aufbaut.
+
+Regeln:
+- Dieser Änderungsantrag definiert keine neuen Verträge (→ CONTRACTS.md §6.11).
+- Dieser Änderungsantrag definiert keine neuen Sicherheitsregeln (→ CHARTER.md).
+- Die Strategic-Layer-Phasen respektieren das Blackboard-Pattern und die Trennung von Operational und Scientific.
+- Questor und HAL erhalten keine Kenntnis von Strategic-Layer-Verträgen (→ CHARTER §SR-04).
+- Die strategische Steuerung ist in `specs/GREMIUM_STRATEGY.md` definiert.
+- Die Pipeline-Mechanik bleibt in `specs/GREMIUM.md`.
 
 ## §0.1 Änderungsantrag ATLAS-HYB-1.0.0 — Atlas-Hybrid-Phasen
 
@@ -90,9 +104,10 @@ Die implementierende KI handelt als:
 | MYRMEX (Migration) | M0–M5 | 6 | 10–15 Tage |
 | MYRMEX (Neubau) | Phase 1–10 | 10 | 25–35 Tage |
 | Atlas-Hybrid | A1–A5 | 5 | 12–18 Tage |
+| **Strategic Layer** | **S1–S3** | **3** | **10–15 Tage** |
 | HAL | HAL-H0 bis HAL-H6 | 7 | 15–22 Tage |
 | Questor | Q0–Q18 | 19 | 44–67 Tage |
-| Gesamt | | 47 | ~106–157 Tage |
+| **Gesamt** | | **50** | **~116–172 Tage** |
 
 ### §2.2 Phasen-Typen
 
@@ -103,6 +118,7 @@ Die implementierende KI handelt als:
 | Atlas-Hybrid | Evidenzbasierte, semantische und explorationsfähige Wissenschaftskarte |
 | HAL | Hardware Abstraction Layer |
 | Questor | Questor-Interna (Teile A–S) |
+| Strategic Layer | 4-Achsen-Steuerung, Kanzler/Königin, Briefing-Zyklus, ControlState |
 
 ---
 
