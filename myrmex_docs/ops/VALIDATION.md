@@ -1,13 +1,13 @@
 # 🧪 VALIDATION — TESTSTRATEGIE UND AKZEPTANZKRITERIEN
 
 | Feld | Wert |
-| --- | --- |
-| Dateiname | `ops/VALIDATION.md` |
-| Version | `1.1.0-atlas-hyb.1` |
-| Status | `ÄNDERUNGSANTRAG ATLAS-HYB-1.0.0 — nach Freigabe BINDEND` |
-| System | `MYRMEX v2.4.0 + Questor v0.2.3 + HAL v0.2.0` |
-| Schicht | `Layer 2 (ops/) — referenziert foundation/ und specs/` |
-| Datum | `21. August 2026` |
+|---|---|
+| Dateiname | ops/VALIDATION.md |
+| Version | **1.2.0-strat.1** |
+| Status | ÄNDERUNGSANTRAG STRAT-1.0.0 — nach Freigabe BINDEND |
+| System | MYRMEX v2.4.0 + Questor v0.2.3 + HAL v0.2.0 + Gremium Strategic Layer v1.0.0 |
+| Schicht | Layer 2 (ops/) — referenziert foundation/ und specs/ |
+| Datum | 21. August 2026 |
 
 ## 0. Geltung und Änderungsregeln
 
@@ -30,6 +30,32 @@ Regeln:
 - Dieser Änderungsantrag definiert keine neuen Sicherheitsregeln (→ CHARTER.md).
 - Die Atlas-Hybrid-Tests respektieren das Blackboard-Pattern und die Trennung von Operational und Scientific.
 - Questor erhält auch in den Tests keine Atlas-Schreibrechte.
+
+### §0.2 Änderungsantrag STRAT-1.0.0 — Strategic-Layer-Test-Suite
+
+Dieser Änderungsantrag fügt die Strategic-Layer-Test-Suite (Suite STRAT) in die Teststrategie ein.
+
+Die Strategic-Layer-Test-Suite testet:
+- ControlState-Manager und 4-Achsen-Zustandsmaschine
+- Closure-Regeln CT-1..CT-10
+- SL-AX-ATOMIC (atomare Achsen-Transitionen)
+- Intent-Verfügbarkeit und Blocklists
+- Validierungspipeline (10 Stufen)
+- DirectiveTranslationTable (DTT)
+- Konfliktdetektor und NO_ACTION
+- Briefing-Erzeugung und Sanitization
+- Constitutional Anchor Protocol
+- Symptom-Trigger und Vordenker-Ansteuerung
+- SL-SAF-7 (SAFE_MODE-Exit)
+- SL-SIG-7a (Overfitting als CONSTRAINT_NEAR_MISS)
+- Quarantäne-Diagnostik-Ausnahme
+
+Regeln:
+- Dieser Änderungsantrag definiert keine neuen Verträge (→ CONTRACTS.md §6.11).
+- Dieser Änderungsantrag definiert keine neuen Sicherheitsregeln (→ CHARTER.md).
+- Die Strategic-Layer-Tests respektieren das Blackboard-Pattern und die Trennung von Operational und Scientific.
+- Questor und HAL erhalten auch in den Tests keine Kenntnis von Strategic-Layer-Verträgen.
+- Die Tests referenzieren `specs/GREMIUM_STRATEGY.md` für die Regeldefinitionen.
 
 ---
 
@@ -128,16 +154,17 @@ Wenn eine Phase explizit freigegeben ist:
 ### §2.2 Test-Verteilung
 
 | Ebene | Anzahl | Anteil | Zweck |
-| --- | --- | --- | --- |
-| Unit-Tests | ~252 | 55% | Einzelne Funktionen und Klassen |
-| Komponententests | ~44 | 10% | Zusammenspiel mehrerer Module |
-| Sicherheitstests | ~30 | 7% | Sicherheitskritische Pfade |
-| Performance-/Stress-Tests | ~21 | 5% | Last, Latenz, Ressourcen |
-| Atlas-Hybrid-Tests | ~120 | 26% | Atlas-Hybrid-System (NEU) |
-| Integrationstests (bestehend) | 18 | 4% | Questor ↔ Gremium (Suite I) |
+|---|---|---|---|
+| Unit-Tests | ~252 | 43% | Einzelne Funktionen und Klassen |
+| Komponententests | ~44 | 8% | Zusammenspiel mehrerer Module |
+| Sicherheitstests | ~30 | 5% | Sicherheitskritische Pfade |
+| Performance-/Stress-Tests | ~21 | 4% | Last, Latenz, Ressourcen |
+| Atlas-Hybrid-Tests | ~120 | 21% | Atlas-Hybrid-System |
+| **Strategic-Layer-Tests** | **~170** | **29%** | **Strategic Layer (Achsen, Kanzler, Königin)** |
+| Integrationstests (bestehend) | 18 | 3% | Questor ↔ Gremium (Suite I) |
 | Szenario-Tests (bestehend) | 5 | 1% | End-to-End (Suite S) |
-| Sonstige bestehende Tests | 51 | 12% | Suite N, R, Z, H |
-| Gesamt | ~541 | 100% | |
+| Sonstige bestehende Tests | 51 | 9% | Suite N, R, Z, H |
+| **Gesamt** | **~711** | **100%** | |
 
 ### §2.3 Test-Suiten-Übersicht
 
@@ -155,7 +182,8 @@ Wenn eine Phase explizit freigegeben ist:
 | Suite Q-P | ~10 | NEU | Questor Performance-Tests |
 | Suite Q-T | ~11 | NEU | Questor Stress-Tests |
 | Suite ATLAS | ~120 | NEU | Atlas-Hybrid-System |
-| Gesamt | ~541 | | |
+| **Suite STRAT** | **~170** | **NEU** | **Strategic Layer (Achsen, Kanzler, Königin)** |
+| **Gesamt** | **~711** | | |
 
 ---
 
